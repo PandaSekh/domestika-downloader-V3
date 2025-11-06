@@ -1,6 +1,6 @@
 {
     "name": "domestika-downloader",
-    "version": "1.0.0",
+    "version": "3.0.0",
     "description": "Domestika course downloader",
     "main": "dist/scripts/start.js",
     "scripts": {
@@ -9,7 +9,7 @@
         "dev": "ts-node scripts/start.ts",
         "watch": "tsc --watch"
     },
-    "author": "",
+    "author": "PandaSekh",
     "license": "ISC",
     "dependencies": {
         "cheerio": "^1.0.0-rc.12",
