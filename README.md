@@ -1,6 +1,6 @@
 # Domestika Course Downloader V3
 
-A tool to download Domestika courses you have purchased. This version is tested only on macOS.
+A tool to download Domestika courses you have purchased. This version is tested on macOS and Linux/Unix systems.
 
 ⚠️ **IMPORTANT:** This tool only works with courses you have purchased. You must be the legitimate owner of the courses you want to download.
 
@@ -30,17 +30,35 @@ The downloader uses your Domestika session cookies to authenticate and download 
 - **Error handling**: Automatic retry with cookie refresh when authentication fails
 
 ## Prerequisites
-### MacOS
+
+### macOS
 1. **ffmpeg**:
    ```bash
    brew install ffmpeg
    ```
 
+### Linux/Unix
+1. **ffmpeg**:
+   - Ubuntu/Debian:
+     ```bash
+     sudo apt update && sudo apt install ffmpeg
+     ```
+   - Fedora/RHEL:
+     ```bash
+     sudo dnf install ffmpeg
+     ```
+   - Arch Linux:
+     ```bash
+     sudo pacman -S ffmpeg
+     ```
+   - Or install from [ffmpeg.org](https://ffmpeg.org/download.html)
+
+### All Platforms
 2. **N_m3u8DL-RE**:
-   - Download from [GitHub releases](https://github.com/nilaoda/N_m3u8DL-RE/releases)
+   - Download the appropriate binary for your platform from [GitHub releases](https://github.com/nilaoda/N_m3u8DL-RE/releases)
    - Place it in the project folder
-   - Make sure the name is `N_m3u8DL-RE` (without extension)
-   - Make it executable:
+   - Make sure the name is `N_m3u8DL-RE` (without extension on Unix-like systems, or `N_m3u8DL-RE.exe` on Windows)
+   - Make it executable (Unix-like systems):
      ```bash
      chmod +x N_m3u8DL-RE
      ```
@@ -95,7 +113,7 @@ The downloader uses your Domestika session cookies to authenticate and download 
 Set a custom download location by adding to your `.env` file:
 
 ```
-DOWNLOAD_PATH=/Users/username/Downloads/courses
+DOWNLOAD_PATH=/path/to/your/downloads/courses
 ```
 
 - Use an absolute path for a specific location

@@ -632,6 +632,16 @@ async function scrapeSite(
     let completedVideos = 0;
     const totalVideos = allVideos.reduce((acc, unit) => acc + unit.videoData.length, 0);
 
+    // Create a MultiBar for parallel downloads to avoid progress bar conflicts
+    const multiBar = new cliProgress.MultiBar({
+        format: '  {title} |{bar}| {percentage}% | ETA: {eta}s',
+        barCompleteChar: '\u2588',
+        barIncompleteChar: '\u2591',
+        hideCursor: true,
+        clearOnComplete: false,
+        stopOnComplete: false
+    });
+
     // Use only the parallel method to download the entire course
     const downloadPromises: Promise<boolean>[] = [];
 
@@ -648,7 +658,7 @@ async function scrapeSite(
                 (async (): Promise<boolean> => {
                     try {
                         console.log(`\nStarting download: ${vData.title}`);
-                        await downloadVideo(vData, courseTitle, unit.title, a + 1, subtitle_langs, unit.unitNumber);
+                        await downloadVideo(vData, courseTitle, unit.title, a + 1, subtitle_langs, unit.unitNumber, multiBar);
                         completedVideos++;
                         console.log(`\nCompleted ${completedVideos} of ${totalVideos} videos`);
                         return true;
@@ -663,6 +673,9 @@ async function scrapeSite(
     }
 
     await Promise.all(downloadPromises);
+    
+    // Stop the MultiBar after all downloads complete
+    multiBar.stop();
 
     if (completedVideos === 0) {
         console.log('\n❌ Could not download any videos. This may be due to invalid cookies.');
@@ -723,18 +736,23 @@ async function getInitialProps(url: string, page: Page): Promise<VideoData[]> {
 }
 
 // Function to execute N_m3u8DL-RE with progress tracking
-function executeWithProgress(command: string, args: string[], videoTitle: string): Promise<{ stdout: string; stderr: string }> {
+function executeWithProgress(command: string, args: string[], videoTitle: string, multiBar?: cliProgress.MultiBar): Promise<{ stdout: string; stderr: string }> {
     return new Promise((resolve, reject) => {
         // Truncate video title if too long for display
         const displayTitle = videoTitle.length > 30 ? videoTitle.substring(0, 27) + '...' : videoTitle;
         
-        const progressBar = new cliProgress.SingleBar({
-            format: `  ${displayTitle.padEnd(30)} |{bar}| {percentage}% | ETA: {eta}s`,
-            barCompleteChar: '\u2588',
-            barIncompleteChar: '\u2591',
-            hideCursor: true,
-            clearOnComplete: false
-        });
+        // Use MultiBar if provided (for parallel downloads), otherwise use SingleBar
+        const progressBar = multiBar 
+            ? multiBar.create(100, 0, {
+                title: displayTitle.padEnd(30)
+            })
+            : new cliProgress.SingleBar({
+                format: `  ${displayTitle.padEnd(30)} |{bar}| {percentage}% | ETA: {eta}s`,
+                barCompleteChar: '\u2588',
+                barIncompleteChar: '\u2591',
+                hideCursor: true,
+                clearOnComplete: false
+            });
 
         const childProcess = spawn(command, args, {
             cwd: process.cwd(),
@@ -778,11 +796,17 @@ function executeWithProgress(command: string, args: string[], videoTitle: string
                     if (progress > 0 && progress <= 100) {
                         if (!progressStarted) {
                             progressStarted = true;
-                            progressBar.start(100, 0);
+                            if (!multiBar) {
+                                progressBar.start(100, 0);
+                            }
                         }
                         const roundedProgress = Math.min(100, Math.max(0, Math.round(progress)));
                         if (roundedProgress !== lastProgress) {
-                            progressBar.update(roundedProgress);
+                            if (multiBar) {
+                                progressBar.update(roundedProgress, { title: displayTitle.padEnd(30) });
+                            } else {
+                                progressBar.update(roundedProgress);
+                            }
                             lastProgress = roundedProgress;
                         }
                         return true;
@@ -809,7 +833,11 @@ function executeWithProgress(command: string, args: string[], videoTitle: string
                     line.includes('Done') ||
                     line.includes('Successfully')) {
                     if (progressStarted) {
-                        progressBar.update(100);
+                        if (multiBar) {
+                            progressBar.update(100, { title: displayTitle.padEnd(30) });
+                        } else {
+                            progressBar.update(100);
+                        }
                     }
                 }
             }
@@ -832,8 +860,13 @@ function executeWithProgress(command: string, args: string[], videoTitle: string
             }
             
             if (progressStarted) {
-                progressBar.update(100);
-                progressBar.stop();
+                if (multiBar) {
+                    progressBar.update(100, { title: displayTitle.padEnd(30) });
+                    progressBar.stop();
+                } else {
+                    progressBar.update(100);
+                    progressBar.stop();
+                }
             }
             
             if (code === 0) {
@@ -858,7 +891,8 @@ async function downloadVideo(
     unitTitle: string,
     index: number,
     subtitle_langs: string[] | null,
-    unitNumber: number
+    unitNumber: number,
+    multiBar?: cliProgress.MultiBar
 ): Promise<boolean> {
     if (!vData.playbackURL) {
         throw new Error(`Invalid video URL for ${vData.title}`);
@@ -896,7 +930,7 @@ async function downloadVideo(
                 '--log-level', 'INFO' // Changed to INFO to get progress output
             ];
             
-            await executeWithProgress(N_M3U8DL_RE, args1080p, vData.title);
+            await executeWithProgress(N_M3U8DL_RE, args1080p, vData.title, multiBar);
             downloadSuccess = true;
         } catch (error) {
             // If 1080p fails, try with best
@@ -910,7 +944,7 @@ async function downloadVideo(
                 '--log-level', 'INFO' // Changed to INFO to get progress output
             ];
             
-            await executeWithProgress(N_M3U8DL_RE, argsBest, vData.title);
+            await executeWithProgress(N_M3U8DL_RE, argsBest, vData.title, multiBar);
             downloadSuccess = true;
         }
 

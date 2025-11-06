@@ -5,7 +5,8 @@ function getExecutablePath(): string {
     return path.join(process.cwd(), 'dist', 'index.js');
 }
 
-console.log('Operating system detected:', process.platform === 'win32' ? 'Windows' : process.platform === 'darwin' ? 'macOS' : 'Linux');
+const osName = process.platform === 'win32' ? 'Windows' : process.platform === 'darwin' ? 'macOS' : process.platform === 'linux' ? 'Linux' : 'Unix';
+console.log('Operating system detected:', osName);
 
 const indexPath = getExecutablePath();
 
