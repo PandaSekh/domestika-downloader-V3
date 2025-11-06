@@ -7,7 +7,7 @@ import * as cheerio from 'cheerio';
 import * as path from 'path';
 import { parse as csvParseSync } from 'csv-parse/sync';
 import { stringify as csvStringifySync } from 'csv-stringify/sync';
-import * as inquirer from 'inquirer';
+import inquirer from 'inquirer';
 import * as cliProgress from 'cli-progress';
 import 'dotenv/config';
 import domestikaAuth, { Credentials } from './auth';
@@ -586,14 +586,14 @@ export async function main(): Promise<void> {
             ]);
             
             // Convert interactive answers to course format
-            const urls = answers.courseUrls.trim().split(' ');
+            const urls = answers!.courseUrls.trim().split(' ');
             coursesToProcess = urls.map(url => {
                 const normalized = normalizeDomestikaUrl(url);
                 return {
                     url: normalized.url,
                     courseTitle: normalized.courseTitle,
-                    subtitles: answers?.subtitles || null,
-                    downloadOption: answers?.downloadOption || 'all'
+                    subtitles: answers!.subtitles || null,
+                    downloadOption: answers!.downloadOption || 'all'
                 };
             });
         }

@@ -12,18 +12,18 @@
     "author": "PandaSekh",
     "license": "ISC",
     "dependencies": {
-        "cheerio": "^1.0.0-rc.12",
+        "cheerio": "^1.1.2",
         "cli-progress": "^3.12.0",
-        "csv-parse": "^5.5.0",
+        "csv-parse": "^6.1.0",
         "csv-stringify": "^6.4.0",
-        "dotenv": "^16.3.1",
-        "inquirer": "^8.2.6",
-        "puppeteer": "^19.6.3"
+        "dotenv": "^17.2.3",
+        "inquirer": "^12.10.0",
+        "puppeteer": "^24.29.0"
     },
     "devDependencies": {
         "@types/cli-progress": "^3.11.3",
-        "@types/inquirer": "^8.2.10",
-        "@types/node": "^20.10.0",
+        "@types/inquirer": "^9.0.9",
+        "@types/node": "^24.10.0",
         "ts-node": "^10.9.2",
         "typescript": "^5.3.3"
     }
