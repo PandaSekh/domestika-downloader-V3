@@ -1,8 +1,27 @@
 # Domestika Course Downloader V3
 
+![Version](https://img.shields.io/badge/version-3.0.0-blue.svg)
+![License](https://img.shields.io/badge/license-ISC-green.svg)
+![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)
+
 A tool to download Domestika courses you have purchased. This version is tested on macOS and Linux/Unix systems.
 
 ⚠️ **IMPORTANT:** This tool only works with courses you have purchased. You must be the legitimate owner of the courses you want to download.
+
+## Table of Contents
+
+- [How It Works](#how-it-works)
+- [Features](#features)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Configuration](#configuration)
+- [File Structure](#file-structure)
+- [Troubleshooting](#troubleshooting)
+- [FAQ](#faq)
+- [Contributing](#contributing)
+- [Future Enhancements](#future-enhancements)
+- [License](#license)
 
 ## How It Works
 
@@ -69,7 +88,7 @@ The downloader uses your Domestika session cookies to authenticate and download 
 
 1. Clone the repository:
    ```bash
-   git clone [REPOSITORY_URL]
+   git clone https://github.com/PandaSekh/domestika-downloader-V3.git
    cd domestika-downloader-V2
    ```
 
@@ -124,6 +143,23 @@ DOWNLOAD_PATH=/path/to/your/downloads/courses
 
 Cookies are stored in `.env` and automatically validated. If cookies expire or become invalid, the program will prompt you to update them.
 
+### Debug Mode
+
+Enable detailed logging by adding to your `.env` file:
+
+```
+DEBUG=true
+```
+
+When enabled, shows additional debug information including:
+- Memory usage statistics
+- ffmpeg commands being executed
+- File operations (subtitle deletion, file sizes, etc.)
+- Download queue progress details
+- CSV loading statistics
+
+This is useful for troubleshooting issues or understanding what the downloader is doing behind the scenes. By default, debug mode is disabled (`DEBUG=false`).
+
 ## File Structure
 
 Downloads are organized as follows:
@@ -135,3 +171,139 @@ Downloads are organized as follows:
         ├── Course Name - U1 - 1_Video Name.mp4
         └── Course Name - U1 - 1_Video Name.srt
 ```
+
+## Input CSV Format
+
+You can use `input.csv` to batch download multiple courses. Create a file named `input.csv` in the project root with the following format:
+
+```csv
+url;subtitles;downloadOption
+https://www.domestika.org/en/courses/1234-course-name;es,en;all
+https://www.domestika.org/en/courses/5678-another-course;en;specific
+```
+
+**Columns:**
+- `url`: Course URL (required)
+- `subtitles`: Comma-separated language codes (optional): `es`, `en`, `pt`, `fr`, `de`, `it`
+- `downloadOption`: `all` or `specific` (optional, defaults to `all`)
+
+**Note:** The CSV uses semicolon (`;`) as delimiter.
+
+## Troubleshooting
+
+### Subtitles Not Embedding
+
+If subtitles are not being embedded into videos:
+
+1. **Check if subtitles were downloaded:**
+   - Look for `.srt` files in the download directory
+   - Enable debug mode (`DEBUG=true` in `.env`) to see detailed logs
+
+2. **Verify subtitle format:**
+   - Subtitles must be in SRT format
+   - Check that subtitle files are not empty
+   - Ensure files contain valid timestamps and text
+
+3. **Check ffmpeg installation:**
+   - Run `ffmpeg -version` to verify ffmpeg is installed
+   - Ensure ffmpeg is in your PATH
+
+4. **Review error messages:**
+   - The tool logs detailed error messages when subtitle operations fail
+   - Check console output for warnings like `⚠️ Failed to download [LANG] subtitles`
+
+5. **Common issues:**
+   - **Subtitle language not available**: Some videos may not have subtitles in your selected language
+   - **File naming mismatch**: N_m3u8DL-RE may save subtitles with different naming patterns
+   - **ffmpeg errors**: Check that your ffmpeg version supports subtitle embedding
+
+### Authentication Issues
+
+If you get authentication errors:
+
+1. **Update cookies:**
+   - Cookies expire after some time
+   - The tool will prompt you to update cookies when they're invalid
+   - Get fresh cookies from your browser's Developer Tools
+
+2. **Verify cookie format:**
+   - Ensure `DOMESTIKA_SESSION` and `DOMESTIKA_CREDENTIALS` are set correctly in `.env`
+   - Copy the full cookie values without extra spaces or quotes
+
+### Download Failures
+
+If downloads fail:
+
+1. **Check N_m3u8DL-RE:**
+   - Verify the binary exists and is executable
+   - Ensure it's the correct version for your platform
+
+2. **Network issues:**
+   - Check your internet connection
+   - Some videos may require multiple retry attempts
+
+3. **Disk space:**
+   - Ensure you have enough disk space for downloads
+   - Videos can be large (hundreds of MB to several GB)
+
+4. **Enable debug mode:**
+   - Set `DEBUG=true` in `.env` for detailed error information
+
+## FAQ
+
+### Can I download courses I haven't purchased?
+
+No. This tool only works with courses you have legitimately purchased. You must use your own Domestika account cookies.
+
+### Why are subtitles not working?
+
+See the [Troubleshooting](#troubleshooting) section above. Common causes include:
+- Subtitle language not available for that video
+- ffmpeg not installed or not in PATH
+- Subtitle file format issues
+
+### Can I download multiple courses at once?
+
+Yes! You can:
+- Enter multiple URLs separated by spaces when prompted
+- Use `input.csv` to batch process multiple courses
+- The tool processes courses sequentially but downloads videos in parallel
+
+### What video quality is downloaded?
+
+The tool attempts to download 1080p first, then falls back to the best available quality if 1080p is not available.
+
+### How do I change the download location?
+
+Set the `DOWNLOAD_PATH` environment variable in your `.env` file:
+```
+DOWNLOAD_PATH=/path/to/your/downloads
+```
+
+### Is Windows supported?
+
+Currently, the tool is only tested on macOS and Linux/Unix systems.
+
+### How do I update my cookies?
+
+The tool will automatically prompt you when cookies expire. You can also manually update them in the `.env` file or run the tool and it will ask for new cookies.
+
+### Can I resume interrupted downloads?
+
+The tool checks for existing video files and skips already downloaded videos. If a download is interrupted, you can run the tool again and it will continue from where it left off.
+
+### What subtitle languages are supported?
+
+Supported languages: Spanish (`es`), English (`en`), Portuguese (`pt`), French (`fr`), German (`de`), Italian (`it`). You can select multiple languages separated by commas.
+
+## Contributing
+
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+## Future Enhancements
+
+For potential future enhancements and features, see [FUTURE.md](FUTURE.md).
+
+## License
+
+ISC

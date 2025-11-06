@@ -1,0 +1,102 @@
+name: Release
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check for changesets
+        id: changesets
+        run: |
+          if [ -z "$(find .changeset -name '*.md' -type f 2>/dev/null | grep -v README)" ]; then
+            echo "has_changesets=false" >> $GITHUB_OUTPUT
+            echo "No changesets found, skipping release"
+          else
+            echo "has_changesets=true" >> $GITHUB_OUTPUT
+            echo "Changesets found, proceeding with release"
+          fi
+
+      - name: Configure Git
+        if: steps.changesets.outputs.has_changesets == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Run changeset version
+        if: steps.changesets.outputs.has_changesets == 'true'
+        run: npm run version
+
+      - name: Get version from package.json
+        if: steps.changesets.outputs.has_changesets == 'true'
+        id: package-version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "New version: $VERSION"
+
+      - name: Read changelog
+        if: steps.changesets.outputs.has_changesets == 'true'
+        id: changelog
+        run: |
+          if [ -f "CHANGELOG.md" ]; then
+            # Extract the latest changelog entry
+            CHANGELOG=$(awk '/^## / {if (found) exit; found=1} found' CHANGELOG.md | sed '/^## /d' | head -n -1)
+            echo "changelog<<EOF" >> $GITHUB_OUTPUT
+            echo "$CHANGELOG" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "changelog=No changelog available" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit version bump
+        if: steps.changesets.outputs.has_changesets == 'true'
+        run: |
+          git add package.json CHANGELOG.md .changeset/
+          git commit -m "chore: bump version to ${{ steps.package-version.outputs.version }}" || echo "No changes to commit"
+          git push origin main || echo "Nothing to push"
+
+      - name: Create GitHub Release
+        if: steps.changesets.outputs.has_changesets == 'true'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.package-version.outputs.version }}
+          name: Release v${{ steps.package-version.outputs.version }}
+          body: |
+            ## Changes
+            
+            ${{ steps.changelog.outputs.changelog }}
+            
+            ---
+            
+            Full changelog: [CHANGELOG.md](CHANGELOG.md)
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
