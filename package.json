@@ -1,19 +1,30 @@
 {
     "name": "domestika-downloader",
     "version": "1.0.0",
-    "description": "",
-    "main": "index.js",
+    "description": "Domestika course downloader",
+    "main": "dist/scripts/start.js",
     "scripts": {
-        "start": "node ./scripts/start.js",
-        "start:mac": "node index.mac.js",
-        "start:win": "node index.win.js"
+        "build": "tsc",
+        "start": "npm run build && node dist/scripts/start.js",
+        "dev": "ts-node scripts/start.ts",
+        "watch": "tsc --watch"
     },
     "author": "",
     "license": "ISC",
     "dependencies": {
         "cheerio": "^1.0.0-rc.12",
-        "puppeteer": "^19.6.3",
+        "cli-progress": "^3.12.0",
+        "csv-parse": "^5.5.0",
+        "csv-stringify": "^6.4.0",
+        "dotenv": "^16.3.1",
         "inquirer": "^8.2.6",
-        "dotenv": "^16.3.1"
+        "puppeteer": "^19.6.3"
+    },
+    "devDependencies": {
+        "@types/cli-progress": "^3.11.3",
+        "@types/inquirer": "^8.2.10",
+        "@types/node": "^20.10.0",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.3.3"
     }
 }

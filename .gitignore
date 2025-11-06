@@ -1,15 +1,15 @@
-# Archivos de configuración y credenciales
+# Configuration and credential files
 .env
 credentials.js
 node_modules/
 backups/
 
-# Carpetas de proyecto
+# Project folders
 domestika_courses/
 logs/
 N_m3u8DL-RE/
 
-# Archivos de log
+# Log files
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -17,16 +17,28 @@ yarn-error.log*
 lerna-debug.log*
 .pnpm-debug.log*
 
-# Archivos del sistema
+# System files
 .DS_Store
 Thumbs.db
 
-# Archivos temporales
+# Temporary files
 *.tmp
 *.temp
 .cache/
 
-# Resto de configuraciones de desarrollo
+# Progress and input files (runtime)
+progress.csv
+input.csv
+
+# TypeScript build output
+dist/
+*.tsbuildinfo
+
+# Executable builds
+executables/
+N_m3u8DL-RE
+
+# Development configuration
 .vscode/
 .idea/
 *.sublime-project

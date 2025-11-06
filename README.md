@@ -1,7 +1,5 @@
 # Domestika Course Downloader V2
 
-[🇪🇸 Leer en Español](README_ES.md)
-
 ⚠️ **IMPORTANT NOTICE**: Currently, this version is optimized and tested for macOS only. We are working on Windows compatibility.
 
 This is an enhanced version of the [Original Domestika Course Downloader](https://github.com/ReneR97/domestika-downloader) created by ReneR97.
@@ -101,14 +99,18 @@ npm start
    b. **Subtitle Selection**:
    - Choose if you want to download subtitles and in which language
 
-3. **Credential Management**:
-   - On first use or if cookies are invalid, the program will ask you to:
+3. **Configuration** (`.env` file):
+   - **Credentials**: On first use or if cookies are invalid, the program will ask you to:
      1. Open Developer Tools (F12)
      2. Go to Storage -> Cookies tab
      3. Copy the cookie values:
         - `_domestika_session`
         - `_credentials`
-   - Credentials are automatically saved in `.env`
+     - Credentials are automatically saved in `.env`
+   - **Download Path**: You can configure where courses are downloaded by adding `DOWNLOAD_PATH` to your `.env` file:
+     - Absolute path: `DOWNLOAD_PATH=/Users/username/Downloads/courses`
+     - Relative path: `DOWNLOAD_PATH=./my_courses` (relative to the project directory)
+     - If not set, defaults to `domestika_courses/` in the project directory
 
 4. **During Download**:
    - You'll see the progress of each video
@@ -117,14 +119,16 @@ npm start
 
 ## File Structure
 
-Courses are downloaded to the `domestika_courses/` folder with the following structure:
+Courses are downloaded to the configured download path (default: `domestika_courses/`) with the following structure:
 ```
-domestika_courses/
+[DOWNLOAD_PATH]/
 └── Course Name/
     └── Section/
         ├── Course Name - U1 - 1_Video Name.mp4
         └── Course Name - U1 - 1_Video Name.srt
 ```
+
+**Note**: You can customize the download path by setting `DOWNLOAD_PATH` in your `.env` file (see Configuration section above).
 
 ## Notes
 

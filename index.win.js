@@ -1,1 +1,0 @@
-console.log('Windows version is under development');
