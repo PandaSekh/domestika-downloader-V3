@@ -77,7 +77,8 @@ jobs:
       - name: Commit version bump
         if: steps.changesets.outputs.has_changesets == 'true'
         run: |
-          git add package.json CHANGELOG.md .changeset/
+          git add package.json CHANGELOG.md
+          git add --all .changeset/
           git commit -m "chore: bump version to ${{ steps.package-version.outputs.version }}" || echo "No changes to commit"
           git push origin main || echo "Nothing to push"
 
