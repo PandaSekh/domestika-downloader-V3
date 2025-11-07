@@ -70,6 +70,14 @@ jobs:
             echo "changelog=No changelog available" >> $GITHUB_OUTPUT
           fi
 
+      - name: Commit version bump
+        if: steps.changesets.outputs.has_changesets == 'true'
+        run: |
+          git add package.json CHANGELOG.md
+          git add --all .changeset/
+          git commit -m "chore: bump version to ${{ steps.package-version.outputs.version }}" || echo "No changes to commit"
+          git push origin main || echo "Nothing to push"
+
       - name: Create GitHub Release
         if: steps.changesets.outputs.hasChangesets == 'false' && steps.check_release.outputs.exists == 'false'
         uses: softprops/action-gh-release@v1
