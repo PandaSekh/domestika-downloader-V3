@@ -69,6 +69,68 @@ jobs:
           else
             echo "changelog=No changelog available" >> $GITHUB_OUTPUT
           fi
+      
+      - name: Get previous tag
+        if: steps.changesets.outputs.has_changesets == 'true'
+        id: previous-tag
+        run: |
+          PREVIOUS_TAG=$(git describe --abbrev=0 --tags 2>/dev/null || echo "")
+          echo "tag=$PREVIOUS_TAG" >> $GITHUB_OUTPUT
+          echo "Previous tag: $PREVIOUS_TAG"
+      
+      - name: Generate release notes from commits
+        if: steps.changesets.outputs.has_changesets == 'true'
+        id: release-notes
+        run: |
+          # Get the previous tag
+          PREVIOUS_TAG="${{ steps.previous-tag.outputs.tag }}"
+          
+          # Generate release notes with conventional commits grouping
+          if [ -z "$PREVIOUS_TAG" ]; then
+            COMMITS=$(git log --pretty=format:"%s" --no-merges)
+          else
+            COMMITS=$(git log ${PREVIOUS_TAG}..HEAD --pretty=format:"%s" --no-merges)
+          fi
+          
+          # Parse conventional commits and group them
+          FEATURES=$(echo "$COMMITS" | grep "^feat" | sed 's/^feat[:(]//' | sed 's/^[^:]*: /- /' || echo "")
+          FIXES=$(echo "$COMMITS" | grep "^fix" | sed 's/^fix[:(]//' | sed 's/^[^:]*: /- /' || echo "")
+          DOCS=$(echo "$COMMITS" | grep "^docs" | sed 's/^docs[:(]//' | sed 's/^[^:]*: /- /' || echo "")
+          PERF=$(echo "$COMMITS" | grep "^perf" | sed 's/^perf[:(]//' | sed 's/^[^:]*: /- /' || echo "")
+          REFACTOR=$(echo "$COMMITS" | grep "^refactor" | sed 's/^refactor[:(]//' | sed 's/^[^:]*: /- /' || echo "")
+          CHORE=$(echo "$COMMITS" | grep "^chore" | sed 's/^chore[:(]//' | sed 's/^[^:]*: /- /' || echo "")
+          
+          # Build the release notes
+          RELEASE_NOTES=""
+          
+          if [ ! -z "$FEATURES" ]; then
+            RELEASE_NOTES="${RELEASE_NOTES}### ✨ Features\n\n${FEATURES}\n\n"
+          fi
+          
+          if [ ! -z "$FIXES" ]; then
+            RELEASE_NOTES="${RELEASE_NOTES}### 🐛 Bug Fixes\n\n${FIXES}\n\n"
+          fi
+          
+          if [ ! -z "$PERF" ]; then
+            RELEASE_NOTES="${RELEASE_NOTES}### ⚡ Performance Improvements\n\n${PERF}\n\n"
+          fi
+          
+          if [ ! -z "$REFACTOR" ]; then
+            RELEASE_NOTES="${RELEASE_NOTES}### ♻️ Code Refactoring\n\n${REFACTOR}\n\n"
+          fi
+          
+          if [ ! -z "$DOCS" ]; then
+            RELEASE_NOTES="${RELEASE_NOTES}### 📚 Documentation\n\n${DOCS}\n\n"
+          fi
+          
+          if [ ! -z "$CHORE" ]; then
+            RELEASE_NOTES="${RELEASE_NOTES}### 🔧 Chores\n\n${CHORE}\n\n"
+          fi
+          
+          # Save to output
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$RELEASE_NOTES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Commit version bump
         if: steps.changesets.outputs.has_changesets == 'true'

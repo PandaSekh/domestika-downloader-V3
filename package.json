@@ -13,7 +13,8 @@
 		"version": "changeset version",
 		"release": "changeset publish",
 		"commitlint": "commitlint --edit",
-		"prepare": "husky install"
+		"prepare": "husky install",
+		"changelog": "conventional-changelog -p angular -i CHANGELOG.md -s"
 	},
 	"author": "PandaSekh",
 	"license": "ISC",
@@ -35,6 +36,7 @@
 		"@types/cli-progress": "^3.11.3",
 		"@types/inquirer": "^9.0.9",
 		"@types/node": "^24.10.0",
+		"conventional-changelog-cli": "^5.0.0",
 		"husky": "^9.1.7",
 		"ts-node": "^10.9.2",
 		"typescript": "^5.3.3"
