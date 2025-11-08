@@ -1,6 +1,6 @@
 {
 	"name": "domestika-downloader",
-	"version": "3.0.0",
+	"version": "3.1.0",
 	"description": "Domestika course downloader",
 	"main": "dist/index.js",
 	"scripts": {
