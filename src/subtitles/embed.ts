@@ -11,7 +11,8 @@ const exec = promisify(execCallback);
 export async function embedSubtitles(
 	videoPath: string,
 	subtitlePaths: string[],
-	multiBar?: cliProgress.MultiBar
+	multiBar?: cliProgress.MultiBar,
+	videoTitle?: string
 ): Promise<boolean> {
 	try {
 		// Verify files exist
@@ -202,8 +203,9 @@ export async function embedSubtitles(
 		// If everything went well, replace the original file
 		fs.unlinkSync(videoPath);
 		fs.renameSync(outputPath, videoPath);
+		const videoName = videoTitle ? ` for ${videoTitle}` : '';
 		log(
-			`Replaced original video with subtitled version (${validSubtitlePaths.length} track(s))`,
+			`Replaced original video with subtitled version (${validSubtitlePaths.length} track(s))${videoName}`,
 			multiBar
 		);
 
