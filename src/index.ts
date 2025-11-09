@@ -1,13 +1,21 @@
 import * as fs from 'node:fs';
 import inquirer from 'inquirer';
+// Parse CLI args before loading dotenv so CLI args can override .env values
+import { parseCliArgs } from './utils/cli-args';
+parseCliArgs();
+// Now load dotenv (CLI args will override any .env values)
 import 'dotenv/config';
+// Parse CLI args again to ensure they override dotenv values
+parseCliArgs();
 import domestikaAuth from './auth';
 import { readInputCSV } from './csv/input';
 import { loadProgress, saveProgress } from './csv/progress';
 import { scrapeSite } from './scraper/scraper';
 import type { CourseToProcess, InquirerAnswers } from './types';
 import { debugLog } from './utils/debug';
+import { getFilteredCliArgs } from './utils/cli-args';
 import { getN3u8DLPath } from './utils/paths';
+import { generateReportData, saveReports } from './utils/reports';
 import { parseSubtitleLanguages } from './utils/subtitles';
 import { normalizeDomestikaUrl } from './utils/url';
 
@@ -22,6 +30,7 @@ function logMemoryUsage(label: string): void {
 
 // Main function
 export async function main(): Promise<void> {
+	const startTime = Date.now();
 	try {
 		console.log('Starting Domestika Downloader...');
 
@@ -47,39 +56,40 @@ export async function main(): Promise<void> {
 					downloadOption: course.downloadOption || 'all',
 				};
 			});
-		} else if (process.argv.length > 2) {
-			// Check for command-line arguments
-			const args = process.argv.slice(2);
-			// Use command-line arguments if provided
-			const courseUrls = args[0];
-			const subtitles = args[1] || null; // Optional subtitle language
-			const downloadOption = args[2] || 'all'; // Optional download option (default: all)
-
-			// Validate URL
-			const urls = courseUrls.trim().split(' ');
-			const validUrls = urls.every((url) => {
-				return url.match(/domestika\.org\/.*?\/courses\/\d+[-\w]+/);
-			});
-
-			if (!validUrls) {
-				throw new Error('Please provide valid Domestika course URLs');
-			}
-
-			// Convert command-line args to course format
-			const normalizedUrls = urls.map((url) => normalizeDomestikaUrl(url));
-			const parsedSubtitles = parseSubtitleLanguages(subtitles);
-			coursesToProcess = normalizedUrls.map((urlInfo) => ({
-				url: urlInfo.url,
-				courseTitle: urlInfo.courseTitle,
-				subtitles: parsedSubtitles,
-				downloadOption: downloadOption,
-			}));
-
-			console.log('Using command-line arguments:');
-			console.log(`  Course URLs: ${courseUrls}`);
-			console.log(`  Subtitles: ${parsedSubtitles ? parsedSubtitles.join(', ') : 'None'}`);
-			console.log(`  Download Option: ${downloadOption}`);
 		} else {
+			// Check for command-line arguments (filter out flags)
+			const filteredArgs = getFilteredCliArgs();
+			if (filteredArgs.length > 0) {
+				// Use command-line arguments if provided
+				const courseUrls = filteredArgs[0];
+				const subtitles = filteredArgs[1] || null; // Optional subtitle language
+				const downloadOption = filteredArgs[2] || 'all'; // Optional download option (default: all)
+
+				// Validate URL
+				const urls = courseUrls.trim().split(' ');
+				const validUrls = urls.every((url) => {
+					return url.match(/domestika\.org\/.*?\/courses\/\d+[-\w]+/);
+				});
+
+				if (!validUrls) {
+					throw new Error('Please provide valid Domestika course URLs');
+				}
+
+				// Convert command-line args to course format
+				const normalizedUrls = urls.map((url) => normalizeDomestikaUrl(url));
+				const parsedSubtitles = parseSubtitleLanguages(subtitles);
+				coursesToProcess = normalizedUrls.map((urlInfo) => ({
+					url: urlInfo.url,
+					courseTitle: urlInfo.courseTitle,
+					subtitles: parsedSubtitles,
+					downloadOption: downloadOption,
+				}));
+
+				console.log('Using command-line arguments:');
+				console.log(`  Course URLs: ${courseUrls}`);
+				console.log(`  Subtitles: ${parsedSubtitles ? parsedSubtitles.join(', ') : 'None'}`);
+				console.log(`  Download Option: ${downloadOption}`);
+			} else {
 			// Ask user for options interactively
 			answers = await inquirer.prompt<InquirerAnswers>([
 				{
@@ -197,9 +207,20 @@ export async function main(): Promise<void> {
 		}
 
 		console.log('\n✅ All courses have been processed');
+
+		// Generate reports
+		const reportData = generateReportData(startTime);
+		saveReports(reportData);
 	} catch (error) {
 		const err = error as Error;
 		console.error('Error:', err.message);
+		// Still generate report even on error
+		try {
+			const reportData = generateReportData(startTime);
+			saveReports(reportData);
+		} catch (reportError) {
+			// Ignore report generation errors
+		}
 		process.exit(1);
 	}
 }
