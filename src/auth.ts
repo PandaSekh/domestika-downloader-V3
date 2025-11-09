@@ -2,6 +2,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import inquirer from 'inquirer';
 import 'dotenv/config';
+import { promptWithTimeout } from './utils/prompt-timeout';
 
 export interface Cookie {
 	name: string;
@@ -46,7 +47,7 @@ export class DomestikaAuth {
 		console.log('   - _domestika_session');
 		console.log('   - _credentials\n');
 
-		const answers = await inquirer.prompt<{
+		const promptPromise = inquirer.prompt<{
 			domestika_session?: string;
 			credentials?: string;
 		}>([
@@ -63,6 +64,13 @@ export class DomestikaAuth {
 				when: () => forceUpdate || !this._credentials_,
 			},
 		]);
+
+		const answers = await promptWithTimeout(
+			promptPromise,
+			30000, // 30 seconds
+			{ domestika_session: undefined, credentials: undefined },
+			'No response received within 30 seconds. Defaulting to "no" (cookies not updated).'
+		);
 
 		if (answers.domestika_session) {
 			this.cookies[0].value = answers.domestika_session;

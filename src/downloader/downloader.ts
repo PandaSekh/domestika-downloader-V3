@@ -5,9 +5,29 @@ import type * as cliProgress from 'cli-progress';
 import { checkVideoFileExists, getVideoId, saveVideoProgress } from '../csv/progress';
 import { embedSubtitles } from '../subtitles/embed';
 import type { VideoData } from '../types';
-import { debugLog, log, logError } from '../utils/debug';
+import { logDebug, logError, logSuccess, logWarning } from '../utils/debug';
 import { getDownloadPath, getN3u8DLPath } from '../utils/paths';
 import { executeWithProgress } from './progress-bar';
+
+/**
+ * Get max retry attempts from environment variable (default: 5)
+ */
+function getMaxRetryAttempts(): number {
+	const maxRetryEnv = process.env.MAX_RETRY_ATTEMPTS
+		? Number.parseInt(process.env.MAX_RETRY_ATTEMPTS, 10)
+		: 5;
+	return Number.isNaN(maxRetryEnv) || maxRetryEnv < 1 ? 5 : maxRetryEnv;
+}
+
+/**
+ * Calculate exponential backoff wait time
+ * Formula: min(2^attempt * 1000ms, 5 minutes)
+ */
+function getBackoffWaitTime(attempt: number): number {
+	const maxWaitMs = 5 * 60 * 1000; // 5 minutes
+	const exponentialWait = 2 ** attempt * 1000; // 2^attempt seconds in ms
+	return Math.min(exponentialWait, maxWaitMs);
+}
 
 /**
  * Wait for a file to be fully written by checking if its size stabilizes
@@ -98,7 +118,8 @@ export async function downloadVideo(
 					unitTitle,
 					index,
 					vData.title,
-					'completed'
+					'completed',
+					0 // No retries needed for existing files
 				);
 				// Add to completed videos set for this session
 				const videoId = getVideoId(courseUrl, unitNumber, index);
@@ -113,46 +134,85 @@ export async function downloadVideo(
 		}
 
 		const fileName = `${courseTitle} - U${unitNumber} - ${index}_${vData.title.trimEnd()}`;
-
-		let downloadSuccess = false;
 		const N_M3U8DL_RE = getN3u8DLPath();
+		const maxRetries = getMaxRetryAttempts();
+		let retryCount = 0;
+		let downloadSuccess = false;
 
-		try {
-			// Try first with 1080p
-			const args1080p = [
-				'-sv',
-				'res=1920x1080',
-				vData.playbackURL,
-				'--save-dir',
-				finalDir,
-				'--save-name',
-				fileName,
-				'--tmp-dir',
-				'.tmp',
-				'--log-level',
-				'INFO', // Keep INFO to get progress output for parsing
-			];
+		// Retry loop with exponential backoff
+		while (retryCount <= maxRetries && !downloadSuccess) {
+			try {
+				// Try first with 1080p
+				const args1080p = [
+					'-sv',
+					'res=1920x1080',
+					vData.playbackURL,
+					'--save-dir',
+					finalDir,
+					'--save-name',
+					fileName,
+					'--tmp-dir',
+					'.tmp',
+					'--log-level',
+					'INFO', // Keep INFO to get progress output for parsing
+				];
 
-			await executeWithProgress(N_M3U8DL_RE, args1080p, vData.title, multiBar);
-			downloadSuccess = true;
-		} catch (_error) {
-			// If 1080p fails, try with best
-			const argsBest = [
-				'-sv',
-				'for=best',
-				vData.playbackURL,
-				'--save-dir',
-				finalDir,
-				'--save-name',
-				fileName,
-				'--tmp-dir',
-				'.tmp',
-				'--log-level',
-				'INFO', // Keep INFO to get progress output for parsing
-			];
+				await executeWithProgress(N_M3U8DL_RE, args1080p, vData.title, multiBar);
+				downloadSuccess = true;
+			} catch (_error1080p) {
+				// If 1080p fails, try with best
+				try {
+					const argsBest = [
+						'-sv',
+						'for=best',
+						vData.playbackURL,
+						'--save-dir',
+						finalDir,
+						'--save-name',
+						fileName,
+						'--tmp-dir',
+						'.tmp',
+						'--log-level',
+						'INFO', // Keep INFO to get progress output for parsing
+					];
 
-			await executeWithProgress(N_M3U8DL_RE, argsBest, vData.title, multiBar);
-			downloadSuccess = true;
+					await executeWithProgress(N_M3U8DL_RE, argsBest, vData.title, multiBar);
+					downloadSuccess = true;
+				} catch (errorBest) {
+					// Both attempts failed
+					const err = errorBest as Error;
+
+					// If we haven't exceeded max retries, wait and retry
+					if (retryCount < maxRetries) {
+						retryCount++;
+						const waitTime = getBackoffWaitTime(retryCount - 1);
+						const waitSeconds = Math.round(waitTime / 1000);
+						logWarning(
+							`Download failed for ${vData.title}, retrying in ${waitSeconds}s (attempt ${retryCount}/${maxRetries})...`,
+							multiBar
+						);
+						logDebug(`[RETRY] Waiting ${waitTime}ms before retry attempt ${retryCount}`);
+						await new Promise((resolve) => setTimeout(resolve, waitTime));
+					} else {
+						// Max retries exceeded, save progress with retry count and throw
+						if (courseUrl) {
+							saveVideoProgress(
+								courseUrl,
+								courseTitle,
+								unitNumber,
+								unitTitle,
+								index,
+								vData.title,
+								'failed',
+								retryCount
+							);
+						}
+						throw new Error(
+							`Failed to download video after ${retryCount} attempts: ${err.message}`
+						);
+					}
+				}
+			}
 		}
 
 		if (downloadSuccess) {
@@ -181,8 +241,8 @@ export async function downloadVideo(
 							'ERROR', // Changed from OFF to ERROR to capture failures
 						];
 
-						debugLog(`[SUBTITLE] Downloading ${lang} subtitles for: ${vData.title}`);
-						debugLog(`[SUBTITLE] Command: ${N_M3U8DL_RE} ${subtitleArgs.join(' ')}`);
+						logDebug(`[SUBTITLE] Downloading ${lang} subtitles for: ${vData.title}`);
+						logDebug(`[SUBTITLE] Command: ${N_M3U8DL_RE} ${subtitleArgs.join(' ')}`);
 
 						await new Promise<void>((resolve, reject) => {
 							const subtitleProcess = spawn(N_M3U8DL_RE, subtitleArgs, {
@@ -227,8 +287,8 @@ export async function downloadVideo(
 							path.join(finalDir, `subtitle_${lang}.srt`),
 						];
 
-						debugLog(`[SUBTITLE] Searching for ${lang} subtitle file in: ${finalDir}`);
-						debugLog(`[SUBTITLE] Attempted paths: ${possibleSubPaths.join(', ')}`);
+						logDebug(`[SUBTITLE] Searching for ${lang} subtitle file in: ${finalDir}`);
+						logDebug(`[SUBTITLE] Attempted paths: ${possibleSubPaths.join(', ')}`);
 
 						let subPath: string | null = null;
 
@@ -236,7 +296,7 @@ export async function downloadVideo(
 						for (const possiblePath of possibleSubPaths) {
 							if (fs.existsSync(possiblePath)) {
 								subPath = possiblePath;
-								debugLog(`[SUBTITLE] Found ${lang} subtitle at: ${subPath}`);
+								logDebug(`[SUBTITLE] Found ${lang} subtitle at: ${subPath}`);
 								break;
 							}
 						}
@@ -244,7 +304,7 @@ export async function downloadVideo(
 						// If not found, search for any .srt file with the language code in the directory
 						if (!subPath) {
 							const files = fs.readdirSync(finalDir);
-							debugLog(`[SUBTITLE] Directory contains ${files.length} files`);
+							logDebug(`[SUBTITLE] Directory contains ${files.length} files`);
 							const srtFiles = files.filter(
 								(f) =>
 									f.endsWith('.srt') &&
@@ -252,9 +312,9 @@ export async function downloadVideo(
 							);
 							if (srtFiles.length > 0) {
 								subPath = path.join(finalDir, srtFiles[0]);
-								debugLog(`[SUBTITLE] Found ${lang} subtitle via search: ${subPath}`);
+								logDebug(`[SUBTITLE] Found ${lang} subtitle via search: ${subPath}`);
 							} else {
-								debugLog(
+								logDebug(
 									`[SUBTITLE] No ${lang} subtitle files found. Available .srt files: ${files.filter((f) => f.endsWith('.srt')).join(', ') || 'none'}`
 								);
 							}
@@ -269,13 +329,16 @@ export async function downloadVideo(
 								success: false,
 								error: 'Subtitle file not found after download',
 							});
-							log(`⚠️  ${lang.toUpperCase()} subtitles downloaded but file not found`, multiBar);
+							logWarning(`${lang.toUpperCase()} subtitles downloaded but file not found`, multiBar);
 						}
 					} catch (error) {
 						const err = error as Error;
 						subtitleResults.push({ lang, success: false, error: err.message });
-						log(`⚠️  Failed to download ${lang.toUpperCase()} subtitles: ${err.message}`, multiBar);
-						debugLog(`[SUBTITLE] Error details for ${lang}: ${err.stack}`);
+						logWarning(
+							`Failed to download ${lang.toUpperCase()} subtitles: ${err.message}`,
+							multiBar
+						);
+						logDebug(`[SUBTITLE] Error details for ${lang}: ${err.stack}`);
 					}
 				}
 
@@ -283,14 +346,14 @@ export async function downloadVideo(
 				const successful = subtitleResults.filter((r) => r.success).length;
 				const failed = subtitleResults.filter((r) => !r.success);
 				if (successful > 0) {
-					log(
-						`✅ Successfully downloaded ${successful} subtitle language(s) for ${vData.title}`,
+					logSuccess(
+						`Successfully downloaded ${successful} subtitle language(s) for ${vData.title}`,
 						multiBar
 					);
 				}
 				if (failed.length > 0) {
-					log(
-						`⚠️  Failed to download ${failed.length} subtitle language(s): ${failed.map((f) => f.lang).join(', ')}`,
+					logWarning(
+						`Failed to download ${failed.length} subtitle language(s): ${failed.map((f) => f.lang).join(', ')}`,
 						multiBar
 					);
 				}
@@ -325,7 +388,7 @@ export async function downloadVideo(
 				}
 			}
 
-			// Save video progress after successful download
+			// Save video progress after successful download (include retry count)
 			if (courseUrl && completedVideos) {
 				saveVideoProgress(
 					courseUrl,
@@ -334,7 +397,8 @@ export async function downloadVideo(
 					unitTitle,
 					index,
 					vData.title,
-					'completed'
+					'completed',
+					retryCount
 				);
 				// Add to completed videos set for this session
 				const videoId = getVideoId(courseUrl, unitNumber, index);

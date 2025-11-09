@@ -4,12 +4,54 @@ import inquirer from 'inquirer';
 import puppeteer, { type HTTPRequest } from 'puppeteer';
 import type { Credentials } from '../auth';
 import domestikaAuth from '../auth';
-import { isVideoCompleted } from '../csv/progress';
+import { getVideoId, isVideoCompleted } from '../csv/progress';
 import { downloadVideo } from '../downloader/downloader';
 import type { Unit, VideoSelection } from '../types';
-import { debugLog, logError, setActiveMultiBar } from '../utils/debug';
-import { loadCourseMetadata, saveCourseMetadata } from './cache';
+import { log, logDebug, logError, logSuccess, setActiveMultiBar } from '../utils/debug';
+import {
+	coverImageExists,
+	downloadCoverImage,
+	extractCoverImageUrl,
+} from '../utils/download-cover';
+import { promptWithTimeout } from '../utils/prompt-timeout';
+import { normalizeDomestikaUrl } from '../utils/url';
+import { isCourseFullyDownloaded, loadCourseMetadata, saveCourseMetadata } from './cache';
 import { getInitialProps } from './video-data';
+
+/**
+ * Safely close browser and page, handling connection errors gracefully
+ */
+async function safeBrowserCleanup(
+	page: Awaited<ReturnType<Awaited<ReturnType<typeof puppeteer.launch>>['newPage']>> | null,
+	browser: Awaited<ReturnType<typeof puppeteer.launch>> | null,
+	requestHandler: ((req: HTTPRequest) => void) | null
+): Promise<void> {
+	if (page && requestHandler) {
+		try {
+			page.off('request', requestHandler);
+			await page.setRequestInterception(false);
+		} catch (error) {
+			// Connection may already be closed, ignore cleanup errors
+			logDebug(`[CLEANUP] Error removing request handler: ${(error as Error).message}`);
+		}
+	}
+	if (page) {
+		try {
+			await page.close();
+		} catch (error) {
+			// Connection may already be closed, ignore cleanup errors
+			logDebug(`[CLEANUP] Error closing page: ${(error as Error).message}`);
+		}
+	}
+	if (browser) {
+		try {
+			await browser.close();
+		} catch (error) {
+			// Connection may already be closed, ignore cleanup errors
+			logDebug(`[CLEANUP] Error closing browser: ${(error as Error).message}`);
+		}
+	}
+}
 
 export async function scrapeSite(
 	courseUrl: string,
@@ -19,8 +61,82 @@ export async function scrapeSite(
 	courseTitle: string | null,
 	completedVideos: Set<string> = new Set<string>()
 ): Promise<void> {
+	// Check if course is fully downloaded before doing anything
+	// Note: isCourseFullyDownloaded checks both videos and cover image
+	if (isCourseFullyDownloaded(courseUrl, completedVideos)) {
+		log(`Course already fully downloaded: ${courseTitle || courseUrl}`);
+		logDebug(`[CACHE] Course ${courseUrl} is fully downloaded (videos + cover), skipping`);
+		return;
+	}
+
 	// Check cache before starting browser
 	const cachedMetadata = loadCourseMetadata(courseUrl);
+
+	// Check if all videos are downloaded but cover is missing
+	if (cachedMetadata) {
+		const normalized = normalizeDomestikaUrl(courseUrl);
+		let totalVideos = 0;
+		let completedCount = 0;
+
+		for (const unit of cachedMetadata) {
+			for (let i = 0; i < unit.videoData.length; i++) {
+				totalVideos++;
+				const videoId = getVideoId(normalized.url, unit.unitNumber, i + 1);
+				if (completedVideos.has(videoId)) {
+					completedCount++;
+				}
+			}
+		}
+
+		// If all videos are downloaded but cover is missing, download cover only
+		if (totalVideos > 0 && completedCount === totalVideos && !coverImageExists(courseTitle)) {
+			log(`All videos downloaded, downloading cover image for: ${courseTitle || courseUrl}`);
+			logDebug(`[CACHE] All videos completed but cover missing, downloading cover only`);
+
+			// Open browser just to get cover image
+			const puppeteerOptions: Parameters<typeof puppeteer.launch>[0] = {
+				headless: true,
+				args: ['--no-sandbox', '--disable-setuid-sandbox'],
+			};
+
+			const coverBrowser = await puppeteer.launch(puppeteerOptions);
+			const coverContext = coverBrowser.defaultBrowserContext();
+			await coverContext.setCookie(...auth.cookies);
+			const coverPage = await coverBrowser.newPage();
+			coverPage.setDefaultNavigationTimeout(0);
+
+			await coverPage.setRequestInterception(true);
+			const coverRequestHandler = (req: HTTPRequest) => {
+				if (
+					req.resourceType() === 'stylesheet' ||
+					req.resourceType() === 'font' ||
+					req.resourceType() === 'image'
+				) {
+					req.abort();
+				} else {
+					req.continue();
+				}
+			};
+			coverPage.on('request', coverRequestHandler);
+
+			try {
+				await coverPage.goto(courseUrl);
+				const html = await coverPage.content();
+				const $ = cheerio.load(html);
+				const coverImageUrl = extractCoverImageUrl($);
+				if (coverImageUrl) {
+					await downloadCoverImage(coverImageUrl, courseTitle, auth.cookies);
+					// Mark as fully downloaded after cover is downloaded
+					saveCourseMetadata(courseUrl, cachedMetadata, courseTitle, true);
+					logDebug(`[CACHE] Cover downloaded, course ${courseUrl} marked as fully downloaded`);
+				}
+			} finally {
+				await safeBrowserCleanup(coverPage, coverBrowser, coverRequestHandler);
+			}
+
+			return;
+		}
+	}
 	let allVideos: Unit[] = [];
 	let browser: Awaited<ReturnType<typeof puppeteer.launch>> | null = null;
 	let page: Awaited<ReturnType<Awaited<ReturnType<typeof puppeteer.launch>>['newPage']>> | null =
@@ -28,12 +144,54 @@ export async function scrapeSite(
 	let requestHandler: ((req: HTTPRequest) => void) | null = null;
 
 	if (cachedMetadata) {
-		debugLog(`[CACHE] Using cached metadata for course: ${courseUrl}`);
+		logDebug(`[CACHE] Using cached metadata for course: ${courseUrl}`);
 		allVideos = cachedMetadata;
-		console.log(`Course: ${courseTitle}`);
+		log(`Course: ${courseTitle}`);
 		console.log(`${allVideos.length} Units loaded from cache`);
+
+		// Try to download cover image even when using cache (in case it wasn't downloaded before)
+		// We need to open a page to get the HTML
+		const puppeteerOptions: Parameters<typeof puppeteer.launch>[0] = {
+			headless: true,
+			args: ['--no-sandbox', '--disable-setuid-sandbox'],
+		};
+
+		browser = await puppeteer.launch(puppeteerOptions);
+		const context = browser.defaultBrowserContext();
+		await context.setCookie(...auth.cookies);
+		page = await browser.newPage();
+		page.setDefaultNavigationTimeout(0);
+
+		await page.setRequestInterception(true);
+		requestHandler = (req: HTTPRequest) => {
+			if (
+				req.resourceType() === 'stylesheet' ||
+				req.resourceType() === 'font' ||
+				req.resourceType() === 'image'
+			) {
+				req.abort();
+			} else {
+				req.continue();
+			}
+		};
+		page.on('request', requestHandler);
+
+		await page.goto(courseUrl);
+		const html = await page.content();
+		const $ = cheerio.load(html);
+
+		const coverImageUrl = extractCoverImageUrl($);
+		if (coverImageUrl) {
+			await downloadCoverImage(coverImageUrl, courseTitle, auth.cookies);
+		}
+
+		// Clean up browser
+		await safeBrowserCleanup(page, browser, requestHandler);
+		page = null;
+		browser = null;
+		requestHandler = null;
 	} else {
-		debugLog(`[CACHE] Cache miss or expired for course: ${courseUrl}`);
+		logDebug(`[CACHE] Cache miss or expired for course: ${courseUrl}`);
 		// Configure Puppeteer
 		const puppeteerOptions: Parameters<typeof puppeteer.launch>[0] = {
 			headless: true,
@@ -71,16 +229,11 @@ export async function scrapeSite(
 		// Check if we're on the correct page
 		if (units.length === 0) {
 			// Remove request interception listener before closing
-			if (page && requestHandler) {
-				page.off('request', requestHandler);
-				await page.setRequestInterception(false);
-			}
-			if (page) await page.close();
-			if (browser) await browser.close();
+			await safeBrowserCleanup(page, browser, requestHandler);
 
-			console.log('\n❌ No videos found. This may be due to invalid cookies.');
+			logError('\nNo videos found. This may be due to invalid cookies.');
 
-			const answer = await inquirer.prompt<{ updateCookies: boolean }>([
+			const promptPromise = inquirer.prompt<{ updateCookies: boolean }>([
 				{
 					type: 'confirm',
 					name: 'updateCookies',
@@ -88,6 +241,13 @@ export async function scrapeSite(
 					default: true,
 				},
 			]);
+
+			const answer = await promptWithTimeout(
+				promptPromise,
+				30000, // 30 seconds
+				{ updateCookies: false },
+				'No response received within 30 seconds. Defaulting to "no" (cookies not updated).'
+			);
 
 			if (answer.updateCookies) {
 				// Force credential update
@@ -105,7 +265,7 @@ export async function scrapeSite(
 			throw new Error('Cannot download videos without valid cookies.');
 		}
 
-		console.log(`Course: ${courseTitle}`);
+		log(`Course: ${courseTitle}`);
 		console.log(`${units.length} Units detected`);
 
 		for (let i = 0; i < units.length; i++) {
@@ -124,17 +284,18 @@ export async function scrapeSite(
 			});
 		}
 
-		// Save to cache after successful scraping
-		saveCourseMetadata(courseUrl, allVideos, courseTitle);
-		debugLog(`[CACHE] Saved metadata to cache for course: ${courseUrl}`);
+		// Save to cache after successful scraping (not fully downloaded yet)
+		saveCourseMetadata(courseUrl, allVideos, courseTitle, false);
+		logDebug(`[CACHE] Saved metadata to cache for course: ${courseUrl}`);
+
+		// Download cover image
+		const coverImageUrl = extractCoverImageUrl($);
+		if (coverImageUrl) {
+			await downloadCoverImage(coverImageUrl, courseTitle, auth.cookies);
+		}
 
 		// Remove request interception listener before closing
-		if (page && requestHandler) {
-			page.off('request', requestHandler);
-			await page.setRequestInterception(false);
-		}
-		if (page) await page.close();
-		if (browser) await browser.close();
+		await safeBrowserCleanup(page, browser, requestHandler);
 	}
 
 	// If user chose to download specific videos
@@ -198,7 +359,7 @@ export async function scrapeSite(
 								vData.section
 							)
 						) {
-							console.log(`⏭️  Skipping already downloaded: ${vData.title}`);
+							// Skipping already downloaded videos (no log needed)
 							continue;
 						}
 						await downloadVideo(
@@ -229,7 +390,7 @@ export async function scrapeSite(
 						selection.videoData.section
 					)
 				) {
-					console.log(`⏭️  Skipping already downloaded: ${selection.videoData.title}`);
+					// Skipping already downloaded video (no log needed)
 				} else {
 					await downloadVideo(
 						selection.videoData,
@@ -247,17 +408,12 @@ export async function scrapeSite(
 		}
 
 		// Clean up browser if it was opened
-		if (page && requestHandler) {
-			page.off('request', requestHandler);
-			await page.setRequestInterception(false);
-		}
-		if (page) await page.close();
-		if (browser) await browser.close();
+		await safeBrowserCleanup(page, browser, requestHandler);
 		return;
 	}
 
 	// If we reach here it's because downloadOption === 'all'
-	console.log('Downloading entire course...');
+	log('Downloading entire course...');
 	let downloadedCount = 0;
 
 	// Count how many videos are already completed
@@ -283,12 +439,12 @@ export async function scrapeSite(
 	}
 
 	if (skippedCount > 0) {
-		console.log(`⏭️  Skipping ${skippedCount} already downloaded video(s)`);
+		log(`Skipping ${skippedCount} already downloaded video(s)`);
 	}
 
 	// Create a MultiBar for parallel downloads to avoid progress bar conflicts
 	const multiBar = new cliProgress.MultiBar({
-		format: '  {title} |{bar}| {percentage}% | ETA: {eta}s',
+		format: '  {title} |{bar}| {percentage}%',
 		barCompleteChar: '\u2588',
 		barIncompleteChar: '\u2591',
 		hideCursor: true,
@@ -356,12 +512,12 @@ export async function scrapeSite(
 	const logMemoryUsage = (label: string): void => {
 		const usage = process.memoryUsage();
 		const formatMB = (bytes: number): string => (bytes / 1024 / 1024).toFixed(2);
-		debugLog(
+		logDebug(
 			`[MEMORY] ${label}: RSS=${formatMB(usage.rss)}MB, HeapUsed=${formatMB(usage.heapUsed)}MB, HeapTotal=${formatMB(usage.heapTotal)}MB, External=${formatMB(usage.external)}MB`
 		);
 	};
 
-	debugLog(
+	logDebug(
 		`[DOWNLOAD] Starting download queue with ${downloadQueue.length} videos, max concurrency: ${MAX_CONCURRENT_DOWNLOADS}`
 	);
 	logMemoryUsage('Before starting downloads');
@@ -401,13 +557,13 @@ export async function scrapeSite(
 				// Log memory every 10 videos
 				if (processedCount % 10 === 0) {
 					logMemoryUsage(`After ${processedCount} videos processed`);
-					debugLog(
+					logDebug(
 						`[DOWNLOAD] Progress: ${processedCount}/${downloadQueue.length} videos processed, ${downloadedCount} downloaded, ${completedVideos.size} in completed set`
 					);
 				}
 			} catch (error) {
 				const err = error as Error;
-				logError(`❌ Error in video ${task.vData.title}: ${err.message}`, multiBar);
+				logError(`Error in video ${task.vData.title}: ${err.message}`, multiBar);
 				processedCount++;
 			}
 		})();
@@ -429,15 +585,77 @@ export async function scrapeSite(
 	setActiveMultiBar(null);
 	logMemoryUsage('After all downloads completed');
 
+	// Check if course is now fully downloaded and update cache
+	const totalVideosInCourse = allVideos.reduce((sum, unit) => sum + unit.videoData.length, 0);
+	const totalCompleted = downloadedCount + skippedCount;
+	if (totalVideosInCourse > 0 && totalCompleted === totalVideosInCourse) {
+		// All videos are completed, check if cover image exists
+		const hasCover = coverImageExists(courseTitle);
+
+		if (!hasCover) {
+			// Cover is missing, try to download it
+			logDebug(`[CACHE] All videos downloaded but cover missing, attempting to download cover`);
+			// We need to get the cover URL, so we'll need to open a browser page
+			const puppeteerOptions: Parameters<typeof puppeteer.launch>[0] = {
+				headless: true,
+				args: ['--no-sandbox', '--disable-setuid-sandbox'],
+			};
+
+			const coverBrowser = await puppeteer.launch(puppeteerOptions);
+			const coverContext = coverBrowser.defaultBrowserContext();
+			await coverContext.setCookie(...auth.cookies);
+			const coverPage = await coverBrowser.newPage();
+			coverPage.setDefaultNavigationTimeout(0);
+
+			await coverPage.setRequestInterception(true);
+			const coverRequestHandler = (req: HTTPRequest) => {
+				if (
+					req.resourceType() === 'stylesheet' ||
+					req.resourceType() === 'font' ||
+					req.resourceType() === 'image'
+				) {
+					req.abort();
+				} else {
+					req.continue();
+				}
+			};
+			coverPage.on('request', coverRequestHandler);
+
+			try {
+				await coverPage.goto(courseUrl);
+				const html = await coverPage.content();
+				const $ = cheerio.load(html);
+				const coverImageUrl = extractCoverImageUrl($);
+				if (coverImageUrl) {
+					await downloadCoverImage(coverImageUrl, courseTitle, auth.cookies);
+				}
+			} finally {
+				await safeBrowserCleanup(coverPage, coverBrowser, coverRequestHandler);
+			}
+		}
+
+		// Check again if cover exists now
+		const hasCoverNow = coverImageExists(courseTitle);
+		if (hasCoverNow) {
+			// All videos and cover are downloaded, mark course as fully downloaded in cache
+			saveCourseMetadata(courseUrl, allVideos, courseTitle, true);
+			logDebug(`[CACHE] Course ${courseUrl} marked as fully downloaded`);
+		} else {
+			logDebug(
+				`[CACHE] Course ${courseUrl} videos completed but cover download failed or unavailable`
+			);
+		}
+	}
+
 	// Print summary
-	console.log(
-		`\n✅ Download summary: ${downloadedCount} new video(s) downloaded, ${skippedCount} already downloaded`
+	logSuccess(
+		`\nDownload summary: ${downloadedCount} new video(s) downloaded, ${skippedCount} already downloaded`
 	);
 
 	if (downloadedCount === 0 && skippedCount === 0) {
-		console.log('\n❌ Could not download any videos. This may be due to invalid cookies.');
+		logError('\nCould not download any videos. This may be due to invalid cookies.');
 
-		const answer = await inquirer.prompt<{ updateCookies: boolean }>([
+		const promptPromise = inquirer.prompt<{ updateCookies: boolean }>([
 			{
 				type: 'confirm',
 				name: 'updateCookies',
@@ -445,6 +663,13 @@ export async function scrapeSite(
 				default: true,
 			},
 		]);
+
+		const answer = await promptWithTimeout(
+			promptPromise,
+			30000, // 30 seconds
+			{ updateCookies: false },
+			'No response received within 30 seconds. Defaulting to "no" (cookies not updated).'
+		);
 
 		if (answer.updateCookies) {
 			// Force credential update
@@ -461,11 +686,6 @@ export async function scrapeSite(
 		}
 	}
 
-	// Clean up browser if it was opened
-	if (page && requestHandler) {
-		page.off('request', requestHandler);
-		await page.setRequestInterception(false);
-	}
-	if (page) await page.close();
-	if (browser) await browser.close();
+	// Clean up browser if it was opened (handle connection errors gracefully)
+	await safeBrowserCleanup(page, browser, requestHandler);
 }

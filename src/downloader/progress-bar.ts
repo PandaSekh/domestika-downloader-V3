@@ -18,7 +18,7 @@ export function executeWithProgress(
 					title: displayTitle.padEnd(30),
 				})
 			: new cliProgress.SingleBar({
-					format: `  ${displayTitle.padEnd(30)} |{bar}| {percentage}% | ETA: {eta}s`,
+					format: `  ${displayTitle.padEnd(30)} |{bar}| {percentage}%`,
 					barCompleteChar: '\u2588',
 					barIncompleteChar: '\u2591',
 					hideCursor: true,
@@ -50,6 +50,8 @@ export function executeWithProgress(
 				/downloaded\s+(\d+\.?\d*)%/gi, // Downloaded percentage
 			];
 
+			let foundProgress = false;
+
 			for (const pattern of patterns) {
 				let match: RegExpExecArray | null = pattern.exec(output);
 				while (match !== null) {
@@ -74,20 +76,23 @@ export function executeWithProgress(
 							}
 						}
 						const roundedProgress = Math.min(100, Math.max(0, Math.round(progress)));
+
 						if (roundedProgress !== lastProgress) {
 							if (multiBar) {
-								progressBar.update(roundedProgress, { title: displayTitle.padEnd(30) });
+								progressBar.update(roundedProgress, {
+									title: displayTitle.padEnd(30),
+								});
 							} else {
 								progressBar.update(roundedProgress);
 							}
 							lastProgress = roundedProgress;
 						}
-						return true;
+						foundProgress = true;
 					}
 					match = pattern.exec(output);
 				}
 			}
-			return false;
+			return foundProgress;
 		};
 
 		const processOutput = (data: Buffer): void => {

@@ -2,11 +2,14 @@ import { spawn } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import type * as cliProgress from 'cli-progress';
-import { debugLog, log, logError } from '../utils/debug';
+import { log, logDebug, logError, logSuccess, logWarning } from '../utils/debug';
 import { getLanguageCode } from './language';
 
 // Helper function to run spawn as a promise
-function spawnPromise(command: string, args: string[]): Promise<{ stdout: string; stderr: string }> {
+function spawnPromise(
+	command: string,
+	args: string[]
+): Promise<{ stdout: string; stderr: string }> {
 	return new Promise((resolve, reject) => {
 		const childProcess = spawn(command, args, {
 			shell: false,
@@ -75,14 +78,14 @@ export async function embedSubtitles(
 		const validSubtitlePaths: string[] = [];
 		for (const subPath of subtitlePaths) {
 			if (!fs.existsSync(subPath)) {
-				log(`⚠️  Subtitle file not found: ${subPath}`, multiBar);
+				logWarning(`Subtitle file not found: ${subPath}`, multiBar);
 				continue;
 			}
 
 			// Check file size
 			const stats = fs.statSync(subPath);
 			if (stats.size === 0) {
-				log(`⚠️  Subtitle file is empty: ${subPath}`, multiBar);
+				logWarning(`Subtitle file is empty: ${subPath}`, multiBar);
 				continue;
 			}
 
@@ -92,13 +95,13 @@ export async function embedSubtitles(
 				subtitleContent = fs.readFileSync(subPath, 'utf-8');
 			} catch (error) {
 				const err = error as Error;
-				log(`⚠️  Failed to read subtitle file ${subPath}: ${err.message}`, multiBar);
-				debugLog(`[SUBTITLE] Read error: ${err.stack}`);
+				logWarning(`Failed to read subtitle file ${subPath}: ${err.message}`, multiBar);
+				logDebug(`[SUBTITLE] Read error: ${err.stack}`);
 				continue;
 			}
 
 			if (subtitleContent.trim().length === 0) {
-				log(`⚠️  Subtitle file contains only whitespace: ${subPath}`, multiBar);
+				logWarning(`Subtitle file contains only whitespace: ${subPath}`, multiBar);
 				continue;
 			}
 
@@ -119,19 +122,19 @@ export async function embedSubtitles(
 			});
 
 			if (!hasSequenceNumbers || !hasTimestamps) {
-				log(`⚠️  Subtitle file does not appear to be in valid SRT format: ${subPath}`, multiBar);
-				debugLog(
+				logWarning(`Subtitle file does not appear to be in valid SRT format: ${subPath}`, multiBar);
+				logDebug(
 					`[SUBTITLE] Validation failed - hasSequenceNumbers: ${hasSequenceNumbers}, hasTimestamps: ${hasTimestamps}`
 				);
 				continue;
 			}
 
 			if (!hasTextContent) {
-				log(`⚠️  Subtitle file appears to have no actual subtitle text: ${subPath}`, multiBar);
+				logWarning(`Subtitle file appears to have no actual subtitle text: ${subPath}`, multiBar);
 				// Still allow it - might be intentional (empty subtitles)
 			}
 
-			debugLog(`[SUBTITLE] Validated subtitle file: ${subPath} (${stats.size} bytes)`);
+			logDebug(`[SUBTITLE] Validated subtitle file: ${subPath} (${stats.size} bytes)`);
 			validSubtitlePaths.push(subPath);
 		}
 
@@ -180,20 +183,20 @@ export async function embedSubtitles(
 		// Copy video and audio without re-encoding
 		ffmpegArgs.push('-c:v', 'copy', '-c:a', 'copy', outputPath);
 
-		debugLog('Running ffmpeg command to embed subtitles...');
+		logDebug('Running ffmpeg command to embed subtitles...');
 		// Log command for debugging (reconstruct for readability)
 		const logCommand = `ffmpeg ${ffmpegArgs.join(' ')}`;
 		const truncatedLog =
 			logCommand.length > 200 ? `${logCommand.substring(0, 200)}...` : logCommand;
-		debugLog(`Command: ${truncatedLog.replace(/\s+/g, ' ')}`);
+		logDebug(`Command: ${truncatedLog.replace(/\s+/g, ' ')}`);
 
 		try {
 			await spawnPromise('ffmpeg', ffmpegArgs);
 		} catch (error) {
 			const err = error as Error;
-			log(`⚠️  First ffmpeg attempt failed: ${err.message}`, multiBar);
-			debugLog(`[FFMPEG] First command error: ${err.stack}`);
-			debugLog(`[FFMPEG] Failed command: ${truncatedLog.substring(0, 500)}...`);
+			logWarning(`First ffmpeg attempt failed: ${err.message}`, multiBar);
+			logDebug(`[FFMPEG] First command error: ${err.stack}`);
+			logDebug(`[FFMPEG] Failed command: ${truncatedLog.substring(0, 500)}...`);
 
 			// If the first command fails, try a simpler version
 			log('Trying alternative ffmpeg method...', multiBar);
@@ -215,11 +218,11 @@ export async function embedSubtitles(
 
 			try {
 				await spawnPromise('ffmpeg', altArgs);
-				log('✅ Alternative ffmpeg method succeeded', multiBar);
+				logSuccess('Alternative ffmpeg method succeeded', multiBar);
 			} catch (altError) {
 				const altErr = altError as Error;
-				logError(`❌ Alternative ffmpeg method also failed: ${altErr.message}`, multiBar);
-				debugLog(`[FFMPEG] Alternative command error: ${altErr.stack}`);
+				logError(`Alternative ffmpeg method also failed: ${altErr.message}`, multiBar);
+				logDebug(`[FFMPEG] Alternative command error: ${altErr.stack}`);
 				throw new Error(`Both ffmpeg attempts failed. Last error: ${altErr.message}`);
 			}
 		}
@@ -233,10 +236,10 @@ export async function embedSubtitles(
 		// Get file sizes for verification
 		const originalSize = fs.statSync(videoPath).size;
 		const outputSize = fs.statSync(outputPath).size;
-		debugLog(`Original size: ${originalSize} bytes, Output size: ${outputSize} bytes`);
+		logDebug(`Original size: ${originalSize} bytes, Output size: ${outputSize} bytes`);
 
 		if (outputSize < originalSize * 0.9) {
-			debugLog(
+			logDebug(
 				'Warning: Output file is significantly smaller than original. This might indicate an error.'
 			);
 		}
@@ -254,7 +257,7 @@ export async function embedSubtitles(
 		for (const subPath of validSubtitlePaths) {
 			if (fs.existsSync(subPath)) {
 				fs.unlinkSync(subPath);
-				debugLog(`Deleted subtitle file: ${subPath}`);
+				logDebug(`Deleted subtitle file: ${subPath}`);
 			}
 		}
 
@@ -267,12 +270,12 @@ export async function embedSubtitles(
 				const srtFilePath = path.join(dir, srtFile);
 				if (fs.existsSync(srtFilePath)) {
 					fs.unlinkSync(srtFilePath);
-					debugLog(`Deleted subtitle file: ${srtFilePath}`);
+					logDebug(`Deleted subtitle file: ${srtFilePath}`);
 				}
 			}
 		} catch (_error) {
 			// Ignore errors when cleaning up subtitle files
-			debugLog('Warning: Could not clean up all subtitle files');
+			logDebug('Warning: Could not clean up all subtitle files');
 		}
 
 		return true;
