@@ -9,68 +9,85 @@ jobs:
   changeset-check:
     name: Changeset Check
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
 
       - name: Check for changeset
         id: changeset-check
         run: |
           CHANGESETS=$(find .changeset -name '*.md' -type f 2>/dev/null | grep -v README || true)
-          
           if [ -z "$CHANGESETS" ]; then
-            echo "status=missing" >> $GITHUB_OUTPUT
-            echo "## ❌ Changeset Required" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "This PR does not include a changeset file." >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### Why is this required?" >> $GITHUB_STEP_SUMMARY
-            echo "Changesets are used to:" >> $GITHUB_STEP_SUMMARY
-            echo "- 📦 Determine version bumps (patch/minor/major)" >> $GITHUB_STEP_SUMMARY
-            echo "- 📝 Generate CHANGELOG.md automatically" >> $GITHUB_STEP_SUMMARY
-            echo "- 🚀 Create GitHub releases with proper descriptions" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### How to add a changeset:" >> $GITHUB_STEP_SUMMARY
-            echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
-            echo "npm run changeset" >> $GITHUB_STEP_SUMMARY
-            echo "git add .changeset/" >> $GITHUB_STEP_SUMMARY
-            echo "git commit -m \"chore: add changeset\"" >> $GITHUB_STEP_SUMMARY
-            echo "git push" >> $GITHUB_STEP_SUMMARY
-            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "See [CONTRIBUTING.md](../CONTRIBUTING.md#5-add-a-changeset) for more details." >> $GITHUB_STEP_SUMMARY
-            exit 1
+            echo "found=false" >> $GITHUB_OUTPUT
           else
-            echo "status=present" >> $GITHUB_OUTPUT
-            echo "## ✅ Changeset Present" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "Found changeset file(s):" >> $GITHUB_STEP_SUMMARY
-            for file in $CHANGESETS; do
-              echo "- \`$file\`" >> $GITHUB_STEP_SUMMARY
-            done
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### Changeset Contents:" >> $GITHUB_STEP_SUMMARY
-            for file in $CHANGESETS; do
-              echo "" >> $GITHUB_STEP_SUMMARY
-              echo "#### \`$(basename $file)\`" >> $GITHUB_STEP_SUMMARY
-              echo "\`\`\`markdown" >> $GITHUB_STEP_SUMMARY
-              cat "$file" >> $GITHUB_STEP_SUMMARY
-              echo "" >> $GITHUB_STEP_SUMMARY
-              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-            done
+            echo "found=true" >> $GITHUB_OUTPUT
           fi
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const changesetFound = '${{ steps.changeset-check.outputs.found }}' === 'true';
+            const botComment = '<!-- changeset-check-bot -->';
+            
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const existingComment = comments.find(comment => 
+              comment.user.type === 'Bot' && comment.body.includes(botComment)
+            );
+            
+            if (!changesetFound) {
+              const body = [
+                botComment,
+                '## ❌ Changeset Required',
+                '',
+                'This PR is missing a changeset file. Changesets are used to:',
+                '- 📦 Determine version bumps (patch/minor/major)',
+                '- 📝 Generate CHANGELOG.md automatically',
+                '- 🚀 Create GitHub releases with proper descriptions',
+                '',
+                '### How to add a changeset:',
+                '```bash',
+                'npm run changeset',
+                'git add .changeset/',
+                'git commit -m "chore: add changeset"',
+                'git push',
+                '```',
+                '',
+                'See [CONTRIBUTING.md](./CONTRIBUTING.md#5-add-a-changeset) for more details.'
+              ].join('\n');
+              
+              if (existingComment) {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: existingComment.id,
+                  body: body
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  body: body
+                });
+              }
+              core.setFailed('Changeset required');
+            } else if (existingComment) {
+              await github.rest.issues.deleteComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id
+              });
+            }
 
   build-and-typecheck:
     name: Build and Type Check
