@@ -95,7 +95,7 @@ export class DomestikaAuth {
 
 		for (const line of lines) {
 			const trimmedLine = line.trim();
-			
+
 			// Preserve comments and empty lines
 			if (trimmedLine.startsWith('#') || trimmedLine === '') {
 				preservedLines.push(line);
@@ -108,7 +108,7 @@ export class DomestikaAuth {
 				// Skip this line, we'll add it with new value
 				continue;
 			}
-			
+
 			if (trimmedLine.startsWith('DOMESTIKA_CREDENTIALS=')) {
 				hasDomestikaCredentials = true;
 				// Skip this line, we'll add it with new value
@@ -130,12 +130,12 @@ export class DomestikaAuth {
 			// Add a blank line before cookie variables if there are other variables
 			newLines.push('');
 		}
-		
+
 		// Add comment if this is the first time adding credentials
 		if (!hasDomestikaSession && !hasDomestikaCredentials && preservedLines.length === 0) {
 			newLines.push('# Domestika Credentials');
 		}
-		
+
 		newLines.push(`DOMESTIKA_SESSION=${this.cookies[0].value}`);
 		newLines.push(`DOMESTIKA_CREDENTIALS=${this._credentials_}`);
 
