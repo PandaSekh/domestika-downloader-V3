@@ -253,6 +253,8 @@ export async function scrapeSite(
 		console.log(`⏭️  Skipping ${skippedCount} already downloaded video(s)`);
 	}
 
+	console.log('📋 Building download queue...');
+
 	// Create a MultiBar for parallel downloads to avoid progress bar conflicts
 	const multiBar = new cliProgress.MultiBar({
 		format: '  {title} |{bar}| {percentage}% | ETA: {eta}s',
@@ -328,8 +330,19 @@ export async function scrapeSite(
 		);
 	};
 
+	const queueSize = downloadQueue.length;
+	if (queueSize > 0) {
+		console.log(`🚀 Starting downloads: ${queueSize} video(s) to download (max ${MAX_CONCURRENT_DOWNLOADS} concurrent)`);
+	} else {
+		console.log('✅ All videos are already downloaded. Nothing to do.');
+		multiBar.stop();
+		setActiveMultiBar(null);
+		await browser.close();
+		return;
+	}
+
 	debugLog(
-		`[DOWNLOAD] Starting download queue with ${downloadQueue.length} videos, max concurrency: ${MAX_CONCURRENT_DOWNLOADS}`
+		`[DOWNLOAD] Starting download queue with ${queueSize} videos, max concurrency: ${MAX_CONCURRENT_DOWNLOADS}`
 	);
 	logMemoryUsage('Before starting downloads');
 

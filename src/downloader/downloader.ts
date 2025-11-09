@@ -4,7 +4,7 @@ import type * as cliProgress from 'cli-progress';
 import { checkVideoFileExists, getVideoId, saveVideoProgress } from '../csv/progress';
 import { embedSubtitles } from '../subtitles/embed';
 import type { VideoData } from '../types';
-import { debugLog, logError } from '../utils/debug';
+import { debugLog, isDebug, logError } from '../utils/debug';
 import { getDownloadPath, getYtDlpCommand } from '../utils/paths';
 import { executeWithProgress } from './progress-bar';
 
@@ -124,6 +124,11 @@ export async function downloadVideo(
 			'--format',
 			'bestvideo[height<=1080]+bestaudio/best[height<=1080]/best', // Prefer 1080p, fallback to best
 		];
+
+		// Add verbose flag if debug mode is enabled
+		if (isDebug()) {
+			ytDlpArgs.push('--verbose');
+		}
 
 		// Add subtitle options if languages are specified
 		if (subtitle_langs && subtitle_langs.length > 0) {
