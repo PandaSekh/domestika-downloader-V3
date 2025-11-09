@@ -1,4 +1,3 @@
-import * as fs from 'node:fs';
 import inquirer from 'inquirer';
 import 'dotenv/config';
 import domestikaAuth from './auth';
@@ -7,7 +6,7 @@ import { loadProgress, saveProgress } from './csv/progress';
 import { scrapeSite } from './scraper/scraper';
 import type { CourseToProcess, InquirerAnswers } from './types';
 import { debugLog } from './utils/debug';
-import { getN3u8DLPath } from './utils/paths';
+import { verifyYtDlp } from './utils/paths';
 import { parseSubtitleLanguages } from './utils/subtitles';
 import { normalizeDomestikaUrl } from './utils/url';
 
@@ -147,13 +146,17 @@ export async function main(): Promise<void> {
 			});
 		}
 
-		// Check N_m3u8DL-RE
-		const N_M3U8DL_RE = getN3u8DLPath();
-		if (!fs.existsSync(N_M3U8DL_RE)) {
+		// Check yt-dlp
+		const ytDlpCheck = await verifyYtDlp();
+		if (!ytDlpCheck.installed) {
 			throw new Error(
-				`${N_M3U8DL_RE} not found! Download the Binary here: https://github.com/nilaoda/N_m3u8DL-RE/releases`
+				`yt-dlp not found! Please install yt-dlp system-wide:\n` +
+					`  macOS: brew install yt-dlp\n` +
+					`  Linux: pip install yt-dlp (or use your package manager)\n` +
+					`  Visit: https://github.com/yt-dlp/yt-dlp#installation`
 			);
 		}
+		console.log(`✓ yt-dlp found (version: ${ytDlpCheck.version})`);
 
 		// Load completed videos for video-level progress tracking
 		logMemoryUsage('Before loadProgress');

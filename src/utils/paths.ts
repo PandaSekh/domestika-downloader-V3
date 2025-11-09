@@ -1,5 +1,8 @@
-import * as fs from 'node:fs';
+import { exec as execCallback } from 'node:child_process';
 import * as path from 'node:path';
+import { promisify } from 'node:util';
+
+const exec = promisify(execCallback);
 
 // Helper function to get the download path from environment variable or default
 export function getDownloadPath(): string {
@@ -16,12 +19,19 @@ export function getDownloadPath(): string {
 	return path.resolve(process.cwd(), 'domestika_courses');
 }
 
-// Helper function to get the path to N_m3u8DL-RE binary
-export function getN3u8DLPath(): string {
-	const binaryName = process.platform === 'win32' ? 'N_m3u8DL-RE.exe' : 'N_m3u8DL-RE';
-	const devPath = path.join(process.cwd(), binaryName);
-	if (fs.existsSync(devPath)) {
-		return devPath;
+// Helper function to verify yt-dlp is installed system-wide
+export async function verifyYtDlp(): Promise<{ installed: boolean; version?: string; error?: string }> {
+	try {
+		const { stdout } = await exec('yt-dlp --version', { timeout: 5000 });
+		const version = stdout.trim();
+		return { installed: true, version };
+	} catch (error) {
+		const err = error as Error;
+		return { installed: false, error: err.message };
 	}
-	return `./${binaryName}`;
+}
+
+// Get yt-dlp command (system-wide, no path needed)
+export function getYtDlpCommand(): string {
+	return 'yt-dlp';
 }

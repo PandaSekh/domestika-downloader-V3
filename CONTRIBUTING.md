@@ -14,7 +14,7 @@ Thank you for your interest in contributing! This document provides guidelines a
 - npm
 - Git
 - ffmpeg (see README.md for installation instructions)
-- N_m3u8DL-RE binary (see README.md)
+- yt-dlp (see README.md for installation instructions)
 
 ### Local Development Setup
 

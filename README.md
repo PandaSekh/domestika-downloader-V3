@@ -29,8 +29,8 @@ The downloader uses your Domestika session cookies to authenticate and download 
 
 1. Accepts course URLs in any format (main page, specific units, or course pages)
 2. Authenticates using cookies stored in a `.env` file
-3. Downloads videos using `N_m3u8DL-RE` for HLS streams
-4. Processes videos with `ffmpeg` to embed subtitles and convert to MP4
+3. Downloads videos using `yt-dlp` for HLS streams
+4. Automatically downloads and embeds subtitles using `yt-dlp`
 5. Organizes downloads by course and section
 
 ## Features
@@ -41,8 +41,8 @@ The downloader uses your Domestika session cookies to authenticate and download 
   - Specific unit: `https://www.domestika.org/en/courses/1234-course-name/units/5678-unit`
   - Course page: `https://www.domestika.org/en/courses/1234-course-name/course`
 - **Subtitle support**: Download subtitles in multiple languages (Spanish, English, Portuguese, French, German, Italian)
-  - Subtitles are embedded as tracks in the MP4 video
-  - Independent SRT files are also generated
+  - Subtitles are automatically downloaded and embedded as tracks in the video file
+  - Uses yt-dlp's built-in subtitle embedding functionality
 - **Automatic credential management**: Cookies are stored securely in `.env` and validated automatically
 - **Parallel downloads**: Multiple videos download simultaneously for faster processing
 - **Progress tracking**: Detailed progress information for each download
@@ -73,14 +73,8 @@ The downloader uses your Domestika session cookies to authenticate and download 
    - Or install from [ffmpeg.org](https://ffmpeg.org/download.html)
 
 ### All Platforms
-2. **N_m3u8DL-RE**:
-   - Download the appropriate binary for your platform from [GitHub releases](https://github.com/nilaoda/N_m3u8DL-RE/releases)
-   - Place it in the project folder
-   - Make sure the name is `N_m3u8DL-RE` (without extension on Unix-like systems, or `N_m3u8DL-RE.exe` on Windows)
-   - Make it executable (Unix-like systems):
-     ```bash
-     chmod +x N_m3u8DL-RE
-     ```
+2. **yt-dlp**:
+See [yt-dlp installation guide](https://github.com/yt-dlp/yt-dlp#installation)
 
 3. **Node.js and npm**
 
@@ -214,8 +208,8 @@ If subtitles are not being embedded into videos:
 
 5. **Common issues:**
    - **Subtitle language not available**: Some videos may not have subtitles in your selected language
-   - **File naming mismatch**: N_m3u8DL-RE may save subtitles with different naming patterns
-   - **ffmpeg errors**: Check that your ffmpeg version supports subtitle embedding
+   - **yt-dlp embedding issues**: If subtitles aren't embedded, the tool will attempt fallback embedding using ffmpeg
+   - **ffmpeg errors**: Check that your ffmpeg version supports subtitle embedding (only needed for fallback)
 
 ### Authentication Issues
 
@@ -234,9 +228,10 @@ If you get authentication errors:
 
 If downloads fail:
 
-1. **Check N_m3u8DL-RE:**
-   - Verify the binary exists and is executable
-   - Ensure it's the correct version for your platform
+1. **Check yt-dlp:**
+   - Verify yt-dlp is installed system-wide: `yt-dlp --version`
+   - Ensure yt-dlp is in your PATH
+   - Update yt-dlp if needed: `pip install --upgrade yt-dlp` or `brew upgrade yt-dlp`
 
 2. **Network issues:**
    - Check your internet connection
