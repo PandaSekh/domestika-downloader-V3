@@ -23,7 +23,8 @@ export async function scrapeSite(
 	const cachedMetadata = loadCourseMetadata(courseUrl);
 	let allVideos: Unit[] = [];
 	let browser: Awaited<ReturnType<typeof puppeteer.launch>> | null = null;
-	let page: Awaited<ReturnType<Awaited<ReturnType<typeof puppeteer.launch>>['newPage']>> | null = null;
+	let page: Awaited<ReturnType<Awaited<ReturnType<typeof puppeteer.launch>>['newPage']>> | null =
+		null;
 	let requestHandler: ((req: HTTPRequest) => void) | null = null;
 
 	if (cachedMetadata) {
