@@ -36,9 +36,6 @@ This document outlines potential UX improvements and features that could be adde
 
 ## Platform Support
 
-### Windows Support
-- Add it
-
 ## Developer Experience
 
 ### CLI Improvements

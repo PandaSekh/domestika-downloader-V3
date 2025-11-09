@@ -1,12 +1,41 @@
-import { exec as execCallback } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { promisify } from 'node:util';
 import type * as cliProgress from 'cli-progress';
 import { debugLog, log, logError } from '../utils/debug';
 import { getLanguageCode } from './language';
 
-const exec = promisify(execCallback);
+// Helper function to run spawn as a promise
+function spawnPromise(command: string, args: string[]): Promise<{ stdout: string; stderr: string }> {
+	return new Promise((resolve, reject) => {
+		const childProcess = spawn(command, args, {
+			shell: false,
+		});
+
+		let stdout = '';
+		let stderr = '';
+
+		childProcess.stdout.on('data', (data: Buffer) => {
+			stdout += data.toString();
+		});
+
+		childProcess.stderr.on('data', (data: Buffer) => {
+			stderr += data.toString();
+		});
+
+		childProcess.on('close', (code: number | null) => {
+			if (code === 0) {
+				resolve({ stdout, stderr });
+			} else {
+				reject(new Error(`Process exited with code ${code}. ${stderr || stdout}`));
+			}
+		});
+
+		childProcess.on('error', (error: Error) => {
+			reject(error);
+		});
+	});
+}
 
 export async function embedSubtitles(
 	videoPath: string,
@@ -116,64 +145,76 @@ export async function embedSubtitles(
 		const filename = path.basename(videoPath, videoExt);
 		const outputPath = path.join(dir, `${filename}_with_subs${videoExt}`);
 
-		// Escape paths properly for shell (handle spaces and special characters)
-		const escapePath = (p: string): string => {
-			// Use single quotes and escape any single quotes in the path
-			return `'${p.replace(/'/g, "'\\''")}'`;
-		};
-
-		// Build ffmpeg command with multiple subtitle inputs
+		// Build ffmpeg args array with multiple subtitle inputs
 		// Format: ffmpeg -i video -i sub1 -i sub2 ... -map 0:v:0 -map 0:a:0 -map 1:s:0 -map 2:s:0 ...
-		let ffmpegCommand = `ffmpeg -i ${escapePath(videoPath)}`;
+		const ffmpegArgs: string[] = ['-i', videoPath];
 
 		// Add all subtitle files as inputs
 		for (const subPath of validSubtitlePaths) {
-			ffmpegCommand += ` -i ${escapePath(subPath)}`;
+			ffmpegArgs.push('-i', subPath);
 		}
 
 		// Map video and audio streams
-		ffmpegCommand += ' -map 0:v:0 -map 0:a:0';
+		ffmpegArgs.push('-map', '0:v:0', '-map', '0:a:0');
 
 		// Map each subtitle stream and set metadata
 		for (let i = 0; i < validSubtitlePaths.length; i++) {
 			const subPath = validSubtitlePaths[i];
 			const langCode = getLanguageCode(subPath);
 			const streamIndex = i + 1; // First subtitle input is index 1 (0 is video)
-			ffmpegCommand += ` -map ${streamIndex}:s:0 -c:s:${i} mov_text -metadata:s:s:${i} language=${langCode}`;
+			ffmpegArgs.push(
+				'-map',
+				`${streamIndex}:s:0`,
+				`-c:s:${i}`,
+				'mov_text',
+				`-metadata:s:s:${i}`,
+				`language=${langCode}`
+			);
 		}
 
 		// Set first subtitle as default
 		if (validSubtitlePaths.length > 0) {
-			ffmpegCommand += ' -disposition:s:0 default';
+			ffmpegArgs.push('-disposition:s:0', 'default');
 		}
 
 		// Copy video and audio without re-encoding
-		ffmpegCommand += ` -c:v copy -c:a copy ${escapePath(outputPath)}`;
+		ffmpegArgs.push('-c:v', 'copy', '-c:a', 'copy', outputPath);
 
 		debugLog('Running ffmpeg command to embed subtitles...');
-		// Truncate long commands in log for readability
-		const logCommand =
-			ffmpegCommand.length > 200 ? `${ffmpegCommand.substring(0, 200)}...` : ffmpegCommand;
-		debugLog(`Command: ${logCommand.replace(/\s+/g, ' ')}`);
+		// Log command for debugging (reconstruct for readability)
+		const logCommand = `ffmpeg ${ffmpegArgs.join(' ')}`;
+		const truncatedLog =
+			logCommand.length > 200 ? `${logCommand.substring(0, 200)}...` : logCommand;
+		debugLog(`Command: ${truncatedLog.replace(/\s+/g, ' ')}`);
 
 		try {
-			await exec(ffmpegCommand, { maxBuffer: 1024 * 1024 * 100 });
+			await spawnPromise('ffmpeg', ffmpegArgs);
 		} catch (error) {
 			const err = error as Error;
 			log(`⚠️  First ffmpeg attempt failed: ${err.message}`, multiBar);
 			debugLog(`[FFMPEG] First command error: ${err.stack}`);
-			debugLog(`[FFMPEG] Failed command: ${ffmpegCommand.substring(0, 500)}...`);
+			debugLog(`[FFMPEG] Failed command: ${truncatedLog.substring(0, 500)}...`);
 
 			// If the first command fails, try a simpler version
 			log('Trying alternative ffmpeg method...', multiBar);
-			let altCommand = `ffmpeg -i ${escapePath(videoPath)}`;
+			const altArgs: string[] = ['-i', videoPath];
 			for (const subPath of validSubtitlePaths) {
-				altCommand += ` -i ${escapePath(subPath)}`;
+				altArgs.push('-i', subPath);
 			}
-			altCommand += ` -c:v copy -c:a copy -c:s mov_text -disposition:s:0 default ${escapePath(outputPath)}`;
+			altArgs.push(
+				'-c:v',
+				'copy',
+				'-c:a',
+				'copy',
+				'-c:s',
+				'mov_text',
+				'-disposition:s:0',
+				'default',
+				outputPath
+			);
 
 			try {
-				await exec(altCommand, { maxBuffer: 1024 * 1024 * 100 });
+				await spawnPromise('ffmpeg', altArgs);
 				log('✅ Alternative ffmpeg method succeeded', multiBar);
 			} catch (altError) {
 				const altErr = altError as Error;
