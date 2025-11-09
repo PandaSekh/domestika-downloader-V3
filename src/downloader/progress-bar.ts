@@ -57,8 +57,8 @@ export function executeWithProgress(
 
 					if (match.length === 3) {
 						// Segment pattern: calculate percentage
-						const current = Number.parseInt(match[1]);
-						const total = Number.parseInt(match[2]);
+						const current = Number.parseInt(match[1], 10);
+						const total = Number.parseInt(match[2], 10);
 						if (total > 0) {
 							progress = (current / total) * 100;
 						}

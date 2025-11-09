@@ -12,10 +12,14 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      issues: write
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -26,135 +30,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Create Release Pull Request
-        id: changesets
-        uses: changesets/action@v1
-        with:
-          version: npm run version
-          title: 'chore: version packages'
-          commit: 'chore: version packages'
+      - name: Run semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Get version from package.json
-        if: steps.changesets.outputs.hasChangesets == 'false'
-        id: package_version
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Current version: $VERSION"
-
-      - name: Check if release already exists
-        if: steps.changesets.outputs.hasChangesets == 'false'
-        id: check_release
-        run: |
-          if gh release view "v${{ steps.package_version.outputs.version }}" >/dev/null 2>&1; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Read changelog
-        if: steps.changesets.outputs.hasChangesets == 'false' && steps.check_release.outputs.exists == 'false'
-        id: changelog
-        run: |
-          if [ -f "CHANGELOG.md" ]; then
-            # Extract the latest changelog entry (between first two ## headers)
-            CHANGELOG=$(awk '/^## / {if (found) exit; found=1; next} found' CHANGELOG.md)
-            echo "changelog<<EOF" >> $GITHUB_OUTPUT
-            echo "$CHANGELOG" >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
-          else
-            echo "changelog=No changelog available" >> $GITHUB_OUTPUT
-          fi
-      
-      - name: Get previous tag
-        if: steps.changesets.outputs.has_changesets == 'true'
-        id: previous-tag
-        run: |
-          PREVIOUS_TAG=$(git describe --abbrev=0 --tags 2>/dev/null || echo "")
-          echo "tag=$PREVIOUS_TAG" >> $GITHUB_OUTPUT
-          echo "Previous tag: $PREVIOUS_TAG"
-      
-      - name: Generate release notes from commits
-        if: steps.changesets.outputs.has_changesets == 'true'
-        id: release-notes
-        run: |
-          # Get the previous tag
-          PREVIOUS_TAG="${{ steps.previous-tag.outputs.tag }}"
-          
-          # Generate release notes with conventional commits grouping
-          if [ -z "$PREVIOUS_TAG" ]; then
-            COMMITS=$(git log --pretty=format:"%s" --no-merges)
-          else
-            COMMITS=$(git log ${PREVIOUS_TAG}..HEAD --pretty=format:"%s" --no-merges)
-          fi
-          
-          # Parse conventional commits and group them
-          FEATURES=$(echo "$COMMITS" | grep "^feat" | sed 's/^feat[:(]//' | sed 's/^[^:]*: /- /' || echo "")
-          FIXES=$(echo "$COMMITS" | grep "^fix" | sed 's/^fix[:(]//' | sed 's/^[^:]*: /- /' || echo "")
-          DOCS=$(echo "$COMMITS" | grep "^docs" | sed 's/^docs[:(]//' | sed 's/^[^:]*: /- /' || echo "")
-          PERF=$(echo "$COMMITS" | grep "^perf" | sed 's/^perf[:(]//' | sed 's/^[^:]*: /- /' || echo "")
-          REFACTOR=$(echo "$COMMITS" | grep "^refactor" | sed 's/^refactor[:(]//' | sed 's/^[^:]*: /- /' || echo "")
-          CHORE=$(echo "$COMMITS" | grep "^chore" | sed 's/^chore[:(]//' | sed 's/^[^:]*: /- /' || echo "")
-          
-          # Build the release notes
-          RELEASE_NOTES=""
-          
-          if [ ! -z "$FEATURES" ]; then
-            RELEASE_NOTES="${RELEASE_NOTES}### ✨ Features\n\n${FEATURES}\n\n"
-          fi
-          
-          if [ ! -z "$FIXES" ]; then
-            RELEASE_NOTES="${RELEASE_NOTES}### 🐛 Bug Fixes\n\n${FIXES}\n\n"
-          fi
-          
-          if [ ! -z "$PERF" ]; then
-            RELEASE_NOTES="${RELEASE_NOTES}### ⚡ Performance Improvements\n\n${PERF}\n\n"
-          fi
-          
-          if [ ! -z "$REFACTOR" ]; then
-            RELEASE_NOTES="${RELEASE_NOTES}### ♻️ Code Refactoring\n\n${REFACTOR}\n\n"
-          fi
-          
-          if [ ! -z "$DOCS" ]; then
-            RELEASE_NOTES="${RELEASE_NOTES}### 📚 Documentation\n\n${DOCS}\n\n"
-          fi
-          
-          if [ ! -z "$CHORE" ]; then
-            RELEASE_NOTES="${RELEASE_NOTES}### 🔧 Chores\n\n${CHORE}\n\n"
-          fi
-          
-          # Save to output
-          echo "notes<<EOF" >> $GITHUB_OUTPUT
-          echo -e "$RELEASE_NOTES" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: Commit version bump
-        if: steps.changesets.outputs.has_changesets == 'true'
-        run: |
-          git add package.json CHANGELOG.md
-          git add --all .changeset/
-          git commit -m "chore: bump version to ${{ steps.package-version.outputs.version }}" || echo "No changes to commit"
-          git push origin main || echo "Nothing to push"
-
-      - name: Create GitHub Release
-        if: steps.changesets.outputs.hasChangesets == 'false' && steps.check_release.outputs.exists == 'false'
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: v${{ steps.package_version.outputs.version }}
-          name: Release v${{ steps.package_version.outputs.version }}
-          body: |
-            ## Changes
-            
-            ${{ steps.changelog.outputs.changelog }}
-            
-            ---
-            
-            Full changelog: [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run semantic-release

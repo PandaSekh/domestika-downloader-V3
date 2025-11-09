@@ -6,97 +6,18 @@ on:
       - main
 
 jobs:
-  changeset-check:
-    name: Changeset Check
+  build-and-typecheck:
+    name: Build and Type Check
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Check for changeset
-        id: changeset-check
-        run: |
-          CHANGESETS=$(find .changeset -name '*.md' -type f 2>/dev/null | grep -v README || true)
-          if [ -z "$CHANGESETS" ]; then
-            echo "found=false" >> $GITHUB_OUTPUT
-          else
-            echo "found=true" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Comment on PR
-        uses: actions/github-script@v7
         with:
-          script: |
-            const changesetFound = '${{ steps.changeset-check.outputs.found }}' === 'true';
-            const botComment = '<!-- changeset-check-bot -->';
-            
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
-            
-            const existingComment = comments.find(comment => 
-              comment.user.type === 'Bot' && comment.body.includes(botComment)
-            );
-            
-            if (!changesetFound) {
-              const body = [
-                botComment,
-                '## ❌ Changeset Required',
-                '',
-                'This PR is missing a changeset file. Changesets are used to:',
-                '- 📦 Determine version bumps (patch/minor/major)',
-                '- 📝 Generate CHANGELOG.md automatically',
-                '- 🚀 Create GitHub releases with proper descriptions',
-                '',
-                '### How to add a changeset:',
-                '```bash',
-                'npm run changeset',
-                'git add .changeset/',
-                'git commit -m "chore: add changeset"',
-                'git push',
-                '```',
-                '',
-                'See [CONTRIBUTING.md](./CONTRIBUTING.md#5-add-a-changeset) for more details.'
-              ].join('\n');
-              
-              if (existingComment) {
-                await github.rest.issues.updateComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  comment_id: existingComment.id,
-                  body: body
-                });
-              } else {
-                await github.rest.issues.createComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: context.issue.number,
-                  body: body
-                });
-              }
-              core.setFailed('Changeset required');
-            } else if (existingComment) {
-              await github.rest.issues.deleteComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: existingComment.id
-              });
-            }
-
-  build-and-typecheck:
-    name: Build and Type Check
-    runs-on: ubuntu-latest
-    needs: changeset-check
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -112,8 +33,7 @@ jobs:
 
       - name: Validate commit messages
         run: |
-          npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose || true
-        continue-on-error: true
+          npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
 
       - name: Type check
         run: npx tsc --noEmit
@@ -121,3 +41,36 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Comment on PR if commit messages are invalid
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const botComment = '<!-- commitlint-check-bot -->';
+            const body = `${botComment}\n\n## ❌ Invalid Commit Messages\n\nThis PR contains commits that don't follow [Conventional Commits](https://www.conventionalcommits.org/). See [CONTRIBUTING.md](./CONTRIBUTING.md#4-commit-messages) for details.`;
+            
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const existing = comments.find(c => 
+              c.user.type === 'Bot' && c.body.includes(botComment)
+            );
+            
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body
+              });
+            }
