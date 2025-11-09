@@ -6,7 +6,10 @@ import { debugLog, log, logError } from '../utils/debug';
 import { getLanguageCode } from './language';
 
 // Helper function to run spawn as a promise
-function spawnPromise(command: string, args: string[]): Promise<{ stdout: string; stderr: string }> {
+function spawnPromise(
+	command: string,
+	args: string[]
+): Promise<{ stdout: string; stderr: string }> {
 	return new Promise((resolve, reject) => {
 		const childProcess = spawn(command, args, {
 			shell: false,
