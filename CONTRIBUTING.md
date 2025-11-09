@@ -28,22 +28,18 @@ Thank you for your interest in contributing! This document provides guidelines a
    ```bash
    npm install
    ```
-4. Set up Husky (git hooks):
-   ```bash
-   npm run prepare
-   ```
-5. Create `.env` file:
+4. Create `.env` file:
    ```bash
    cp .env.example .env
    ```
    Then add your Domestika cookies to `.env` (see README.md for instructions)
 
-6. Build the project:
+5. Build the project:
    ```bash
    npm run build
    ```
 
-7. Run the project:
+6. Run the project:
    ```bash
    npm start
    ```
@@ -118,33 +114,18 @@ docs: update installation instructions
 refactor: simplify video download logic
 ```
 
-**Important:** Commit messages are validated by Husky hooks. Invalid commit messages will be rejected.
+**Important:** 
+- Commit messages are validated by Husky hooks and CI. Invalid commit messages will be rejected.
+- Your commit messages directly determine version bumps and release notes. Write them carefully!
 
-### 5. Add a Changeset
+**Version Impact by Commit Type:**
+- `feat:` → **Minor version bump** (e.g., 3.1.0 → 3.2.0)
+- `fix:` → **Patch version bump** (e.g., 3.1.0 → 3.1.1)
+- `perf:` → **Patch version bump** (e.g., 3.1.0 → 3.1.1)
+- `feat!:` or `BREAKING CHANGE:` → **Major version bump** (e.g., 3.1.0 → 4.0.0)
+- `docs:`, `style:`, `refactor:`, `test:`, `build:`, `ci:`, `chore:` → **No release** (version unchanged)
 
-**⚠️ REQUIRED:** Every PR must include a changeset file.
-
-1. Create a changeset:
-   ```bash
-   npm run changeset
-   ```
-2. Follow the prompts:
-   - Select the type of change (patch, minor, or major)
-   - Write a summary of your changes
-3. Commit the changeset file:
-   ```bash
-   git add .changeset/
-   git commit -m "feat: your feature description"
-   ```
-
-**Changeset types:**
-- **patch**: Bug fixes, small improvements (e.g., `fix: resolve download error`)
-- **minor**: New features, enhancements (e.g., `feat: add subtitle language selection`)
-- **major**: Breaking changes (e.g., `feat!: change API structure`)
-
-See [.changeset/README.md](.changeset/README.md) for more details.
-
-### 6. Testing
+### 5. Testing
 
 Before submitting your PR:
 
@@ -168,7 +149,7 @@ Before submitting your PR:
    - Verify error handling
    - Check edge cases
 
-### 7. Submit a Pull Request
+### 6. Submit a Pull Request
 
 1. Push your branch:
    ```bash
@@ -179,11 +160,9 @@ Before submitting your PR:
    - Use a descriptive title
    - Fill out the PR template completely
    - Link any related issues
-   - Ensure the PR includes a changeset
 
 3. **PR Requirements:**
    - ✅ All CI checks must pass
-   - ✅ Changeset file must be included
    - ✅ Code must be formatted and linted
    - ✅ Commit messages must follow conventional commits
    - ✅ PR description must be complete
@@ -193,7 +172,40 @@ Before submitting your PR:
 1. Maintainers will review your PR
 2. Address any feedback or requested changes
 3. Once approved, your PR will be merged
-4. After merge, a release will be automatically created (if changeset is present)
+4. After merge, a release will be automatically created if there are releasable commits
+
+## Release Process
+
+Releases are fully automated using [semantic-release](https://semantic-release.gitbook.io/)! Here's how it works:
+
+### Automatic Release Generation
+
+When commits are pushed to `main`, semantic-release automatically:
+
+1. **Analyzes commits** to determine if a release is needed based on conventional commit types
+2. **Calculates the next version** (patch/minor/major) based on commit messages:
+   - `feat:` commits → minor version bump
+   - `fix:` or `perf:` commits → patch version bump
+   - `feat!:` or commits with `BREAKING CHANGE:` → major version bump
+   - Other commit types (`docs:`, `chore:`, etc.) → no release
+3. **Generates CHANGELOG.md** with all changes since the last release
+4. **Updates package.json** with the new version
+5. **Creates a GitHub release** with comprehensive release notes grouped by type:
+   - ✨ Features (`feat:`)
+   - 🐛 Bug Fixes (`fix:`)
+   - ⚡ Performance Improvements (`perf:`)
+   - ♻️ Code Refactoring (`refactor:`)
+   - 📚 Documentation (`docs:`)
+   - 🔧 Chores (`chore:`)
+6. **Commits and pushes** the version bump and changelog back to the repository
+
+### Best Practices for Releases
+
+1. **Write clear commit messages** - They become your release notes and determine version bumps!
+2. **Use appropriate commit types** - This groups changes logically and controls versioning
+3. **Use breaking change notation** - Add `!` after the type (e.g., `feat!:`) or include `BREAKING CHANGE:` in the footer for major versions
+4. **Keep commits atomic** - One logical change per commit
+5. **Squash commits when merging** - If your PR has multiple commits, consider squashing to keep the history clean
 
 
 ## Debugging Tips

@@ -1,5 +1,5 @@
 {
-	"$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.3.4/schema.json",
 	"vcs": {
 		"enabled": true,
 		"clientKind": "git",
@@ -7,15 +7,16 @@
 	},
 	"files": {
 		"ignoreUnknown": false,
-		"ignore": [
-			"node_modules/**",
-			"dist/**",
-			"*.js.map",
-			"*.d.ts.map",
-			"Logs/**",
-			"logs/**",
-			"N_m3u8DL-RE",
-			"N_m3u8DL-RE/**"
+		"includes": [
+			"**",
+			"!**/node_modules",
+			"!**/dist",
+			"!**/*.js.map",
+			"!**/*.d.ts.map",
+			"!**/Logs",
+			"!**/logs",
+			"!**/N_m3u8DL-RE",
+			"!**/N_m3u8DL-RE"
 		]
 	},
 	"formatter": {
@@ -26,9 +27,7 @@
 		"lineWidth": 100,
 		"attributePosition": "auto"
 	},
-	"organizeImports": {
-		"enabled": true
-	},
+	"assist": { "actions": { "source": { "organizeImports": "on" } } },
 	"linter": {
 		"enabled": true,
 		"rules": {
@@ -61,7 +60,7 @@
 	},
 	"overrides": [
 		{
-			"include": ["*.js", "scripts/**/*.js"],
+			"includes": ["**/*.js", "**/scripts/**/*.js"],
 			"linter": {
 				"rules": {
 					"suspicious": {

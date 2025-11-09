@@ -280,12 +280,15 @@ export async function downloadVideo(
 					}
 				}
 
-			// Log summary of subtitle download results
-			const successful = subtitleResults.filter((r) => r.success).length;
-			const failed = subtitleResults.filter((r) => !r.success);
-			if (successful > 0) {
-				log(`✅ Successfully downloaded ${successful} subtitle language(s) for ${vData.title}`, multiBar);
-			}
+				// Log summary of subtitle download results
+				const successful = subtitleResults.filter((r) => r.success).length;
+				const failed = subtitleResults.filter((r) => !r.success);
+				if (successful > 0) {
+					log(
+						`✅ Successfully downloaded ${successful} subtitle language(s) for ${vData.title}`,
+						multiBar
+					);
+				}
 				if (failed.length > 0) {
 					log(
 						`⚠️  Failed to download ${failed.length} subtitle language(s): ${failed.map((f) => f.lang).join(', ')}`,
@@ -315,11 +318,11 @@ export async function downloadVideo(
 						}
 					}
 
-				if (actualVideoPath) {
-					// Wait for file to be fully written before embedding subtitles
-					await waitForFileComplete(actualVideoPath);
-					await embedSubtitles(actualVideoPath, subtitlePaths, multiBar, vData.title);
-				}
+					if (actualVideoPath) {
+						// Wait for file to be fully written before embedding subtitles
+						await waitForFileComplete(actualVideoPath);
+						await embedSubtitles(actualVideoPath, subtitlePaths, multiBar, vData.title);
+					}
 				}
 			}
 
