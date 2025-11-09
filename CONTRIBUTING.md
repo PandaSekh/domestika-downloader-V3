@@ -157,7 +157,8 @@ Before submitting your PR:
    ```
 
 2. Create a PR on GitHub:
-   - Use a descriptive title
+   - **IMPORTANT: Use a conventional commit format for the PR title** (e.g., `fix: preserve env vars when updating credentials`)
+   - If your PR is squash-merged, the PR title becomes the commit message on `main`
    - Fill out the PR template completely
    - Link any related issues
 
@@ -165,6 +166,7 @@ Before submitting your PR:
    - ✅ All CI checks must pass
    - ✅ Code must be formatted and linted
    - ✅ Commit messages must follow conventional commits
+   - ✅ **PR title must follow conventional commits format** (critical for releases!)
    - ✅ PR description must be complete
 
 ## Code Review Process
@@ -205,7 +207,10 @@ When commits are pushed to `main`, semantic-release automatically:
 2. **Use appropriate commit types** - This groups changes logically and controls versioning
 3. **Use breaking change notation** - Add `!` after the type (e.g., `feat!:`) or include `BREAKING CHANGE:` in the footer for major versions
 4. **Keep commits atomic** - One logical change per commit
-5. **Squash commits when merging** - If your PR has multiple commits, consider squashing to keep the history clean
+5. **PR titles must follow conventional commits** - If using squash merge, the PR title becomes the commit message. Use formats like:
+   - `fix: description of bug fix`
+   - `feat: description of new feature`
+   - `perf: description of performance improvement`
 
 
 ## Debugging Tips
