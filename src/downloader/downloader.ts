@@ -112,24 +112,23 @@ export async function downloadVideo(
 			fs.mkdirSync(finalDir, { recursive: true });
 		}
 
-		const fileName = `${courseTitle} - U${unitNumber} - ${index}_${vData.title.trimEnd()}`;
-		const outputPath = path.join(finalDir, `${fileName}.%(ext)s`);
+		const fileName = `${index}_${vData.title.trimEnd()}`;
 		const ytDlpCommand = getYtDlpCommand();
 
-		// Build yt-dlp arguments
+		// Build yt-dlp arguments - simplified approach that works reliably
 		const ytDlpArgs: string[] = [
+			'--output',
+			fileName, // Simple filename pattern
+			'--paths',
+			finalDir, // Set the download directory
 			'--format',
 			'bestvideo[height<=1080]+bestaudio/best[height<=1080]/best', // Prefer 1080p, fallback to best
-			'--output',
-			outputPath,
 		];
 
 		// Add subtitle options if languages are specified
 		if (subtitle_langs && subtitle_langs.length > 0) {
-			ytDlpArgs.push('--write-subs'); // Write subtitle file
 			ytDlpArgs.push('--sub-langs', subtitle_langs.join(',')); // Specify subtitle languages
 			ytDlpArgs.push('--embed-subs'); // Embed subtitles in video file
-			ytDlpArgs.push('--convert-subs', 'srt'); // Convert subtitles to SRT format
 			debugLog(`[DOWNLOAD] Downloading video with subtitles: ${subtitle_langs.join(', ')}`);
 		}
 
@@ -150,10 +149,11 @@ export async function downloadVideo(
 
 		if (downloadSuccess) {
 			// Find the downloaded video file (yt-dlp may output .mp4, .mkv, etc.)
-			const videoExtensions = ['.mp4', '.mkv', '.webm', '.m4v', '.mov'];
+			// yt-dlp will add the extension automatically based on the format
+			const videoExtensions = ['.mp4', '.mkv', '.webm', '.m4v', '.mov', '.ts'];
 			let actualVideoPath: string | null = null;
 
-			// Try to find the video file with expected name
+			// Try to find the video file with expected name (yt-dlp adds extension)
 			for (const ext of videoExtensions) {
 				const candidatePath = path.join(finalDir, `${fileName}${ext}`);
 				if (fs.existsSync(candidatePath)) {

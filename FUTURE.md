@@ -34,6 +34,9 @@ This document outlines potential UX improvements and features that could be adde
 - Generate downloadable HTML/JSON report after completion
 - Include download statistics, failed items
 
+### Fixes
+- Do not override full .env on cookie rewrite
+
 ## Platform Support
 
 ### Windows Support
