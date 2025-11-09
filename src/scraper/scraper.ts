@@ -8,6 +8,7 @@ import { isVideoCompleted } from '../csv/progress';
 import { downloadVideo } from '../downloader/downloader';
 import type { Unit, VideoSelection } from '../types';
 import { debugLog, logError, setActiveMultiBar } from '../utils/debug';
+import { loadCourseMetadata, saveCourseMetadata } from './cache';
 import { getInitialProps } from './video-data';
 
 export async function scrapeSite(
@@ -18,92 +19,121 @@ export async function scrapeSite(
 	courseTitle: string | null,
 	completedVideos: Set<string> = new Set<string>()
 ): Promise<void> {
-	// Configure Puppeteer
-	const puppeteerOptions: Parameters<typeof puppeteer.launch>[0] = {
-		headless: true,
-		args: ['--no-sandbox', '--disable-setuid-sandbox'],
-	};
+	// Check cache before starting browser
+	const cachedMetadata = loadCourseMetadata(courseUrl);
+	let allVideos: Unit[] = [];
+	let browser: Awaited<ReturnType<typeof puppeteer.launch>> | null = null;
+	let page: Awaited<ReturnType<Awaited<ReturnType<typeof puppeteer.launch>>['newPage']>> | null = null;
+	let requestHandler: ((req: HTTPRequest) => void) | null = null;
 
-	const browser = await puppeteer.launch(puppeteerOptions);
-	const page = await browser.newPage();
-	page.setDefaultNavigationTimeout(0);
-	await page.setCookie(...auth.cookies);
+	if (cachedMetadata) {
+		debugLog(`[CACHE] Using cached metadata for course: ${courseUrl}`);
+		allVideos = cachedMetadata;
+		console.log(`Course: ${courseTitle}`);
+		console.log(`${allVideos.length} Units loaded from cache`);
+	} else {
+		debugLog(`[CACHE] Cache miss or expired for course: ${courseUrl}`);
+		// Configure Puppeteer
+		const puppeteerOptions: Parameters<typeof puppeteer.launch>[0] = {
+			headless: true,
+			args: ['--no-sandbox', '--disable-setuid-sandbox'],
+		};
 
-	await page.setRequestInterception(true);
-	const requestHandler = (req: HTTPRequest) => {
-		if (
-			req.resourceType() === 'stylesheet' ||
-			req.resourceType() === 'font' ||
-			req.resourceType() === 'image'
-		) {
-			req.abort();
-		} else {
-			req.continue();
+		browser = await puppeteer.launch(puppeteerOptions);
+		const context = browser.defaultBrowserContext();
+		await context.setCookie(...auth.cookies);
+		page = await browser.newPage();
+		page.setDefaultNavigationTimeout(0);
+
+		await page.setRequestInterception(true);
+		requestHandler = (req: HTTPRequest) => {
+			if (
+				req.resourceType() === 'stylesheet' ||
+				req.resourceType() === 'font' ||
+				req.resourceType() === 'image'
+			) {
+				req.abort();
+			} else {
+				req.continue();
+			}
+		};
+		page.on('request', requestHandler);
+
+		await page.goto(courseUrl);
+		const html = await page.content();
+		const $ = cheerio.load(html);
+
+		console.log('Analyzing site');
+
+		const units = $('h4.h2.unit-item__title a');
+
+		// Check if we're on the correct page
+		if (units.length === 0) {
+			// Remove request interception listener before closing
+			if (page && requestHandler) {
+				page.off('request', requestHandler);
+				await page.setRequestInterception(false);
+			}
+			if (page) await page.close();
+			if (browser) await browser.close();
+
+			console.log('\n❌ No videos found. This may be due to invalid cookies.');
+
+			const answer = await inquirer.prompt<{ updateCookies: boolean }>([
+				{
+					type: 'confirm',
+					name: 'updateCookies',
+					message: 'Do you want to update the cookies?',
+					default: true,
+				},
+			]);
+
+			if (answer.updateCookies) {
+				// Force credential update
+				await domestikaAuth.promptForCredentials(true);
+				// Try again with new credentials
+				return scrapeSite(
+					courseUrl,
+					subtitle_langs,
+					await domestikaAuth.getCookies(),
+					downloadOption,
+					courseTitle,
+					completedVideos
+				);
+			}
+			throw new Error('Cannot download videos without valid cookies.');
 		}
-	};
-	page.on('request', requestHandler);
 
-	await page.goto(courseUrl);
-	const html = await page.content();
-	const $ = cheerio.load(html);
+		console.log(`Course: ${courseTitle}`);
+		console.log(`${units.length} Units detected`);
 
-	console.log('Analyzing site');
+		for (let i = 0; i < units.length; i++) {
+			const unitHref = $(units[i]).attr('href');
+			if (!unitHref) continue;
 
-	const allVideos: Unit[] = [];
-	const units = $('h4.h2.unit-item__title a');
+			const videoData = await getInitialProps(unitHref, page);
+			allVideos.push({
+				title: $(units[i])
+					.text()
+					.replace(/\./g, '')
+					.trim()
+					.replace(/[/\\?%*:|"<>]/g, '-'),
+				videoData: videoData,
+				unitNumber: i + 1,
+			});
+		}
 
-	// Check if we're on the correct page
-	if (units.length === 0) {
+		// Save to cache after successful scraping
+		saveCourseMetadata(courseUrl, allVideos, courseTitle);
+		debugLog(`[CACHE] Saved metadata to cache for course: ${courseUrl}`);
+
 		// Remove request interception listener before closing
-		page.off('request', requestHandler);
-		await page.setRequestInterception(false);
-		await page.close();
-		await browser.close();
-
-		console.log('\n❌ No videos found. This may be due to invalid cookies.');
-
-		const answer = await inquirer.prompt<{ updateCookies: boolean }>([
-			{
-				type: 'confirm',
-				name: 'updateCookies',
-				message: 'Do you want to update the cookies?',
-				default: true,
-			},
-		]);
-
-		if (answer.updateCookies) {
-			// Force credential update
-			await domestikaAuth.promptForCredentials(true);
-			// Try again with new credentials
-			return scrapeSite(
-				courseUrl,
-				subtitle_langs,
-				await domestikaAuth.getCookies(),
-				downloadOption,
-				courseTitle,
-				completedVideos
-			);
+		if (page && requestHandler) {
+			page.off('request', requestHandler);
+			await page.setRequestInterception(false);
 		}
-		throw new Error('Cannot download videos without valid cookies.');
-	}
-
-	console.log(`Course: ${courseTitle}`);
-	console.log(`${units.length} Units detected`);
-
-	for (let i = 0; i < units.length; i++) {
-		const unitHref = $(units[i]).attr('href');
-		if (!unitHref) continue;
-
-		const videoData = await getInitialProps(unitHref, page);
-		allVideos.push({
-			title: $(units[i])
-				.text()
-				.replace(/\./g, '')
-				.trim()
-				.replace(/[/\\?%*:|"<>]/g, '-'),
-			videoData: videoData,
-			unitNumber: i + 1,
-		});
+		if (page) await page.close();
+		if (browser) await browser.close();
 	}
 
 	// If user chose to download specific videos
@@ -215,11 +245,13 @@ export async function scrapeSite(
 			}
 		}
 
-		// Remove request interception listener before closing
-		page.off('request', requestHandler);
-		await page.setRequestInterception(false);
-		await page.close();
-		await browser.close();
+		// Clean up browser if it was opened
+		if (page && requestHandler) {
+			page.off('request', requestHandler);
+			await page.setRequestInterception(false);
+		}
+		if (page) await page.close();
+		if (browser) await browser.close();
 		return;
 	}
 
@@ -428,9 +460,11 @@ export async function scrapeSite(
 		}
 	}
 
-	// Remove request interception listener before closing
-	page.off('request', requestHandler);
-	await page.setRequestInterception(false);
-	await page.close();
-	await browser.close();
+	// Clean up browser if it was opened
+	if (page && requestHandler) {
+		page.off('request', requestHandler);
+		await page.setRequestInterception(false);
+	}
+	if (page) await page.close();
+	if (browser) await browser.close();
 }

@@ -5,6 +5,9 @@
 			"@semantic-release/commit-analyzer",
 			{
 				"preset": "conventionalcommits",
+				"parserOpts": {
+					"noteKeywords": ["BREAKING CHANGE", "BREAKING CHANGES"]
+				},
 				"releaseRules": [
 					{ "type": "feat", "release": "minor" },
 					{ "type": "fix", "release": "patch" },
