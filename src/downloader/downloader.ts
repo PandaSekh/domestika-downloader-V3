@@ -121,8 +121,17 @@ export async function downloadVideo(
 			fileName, // Simple filename pattern
 			'--paths',
 			finalDir, // Set the download directory
+			// Force combined streams only to avoid ffmpeg merging issues with separate audio/video
+			// This prevents "Invalid data found when processing input" errors
 			'--format',
-			'bestvideo[height<=1080]+bestaudio/best[height<=1080]/best', // Prefer 1080p, fallback to best
+			'best[height<=1080]/worst', // Prefer combined stream, fallback to worst (better than failing)
+			// Disable external downloader to prevent ffmpeg from being used for merging
+			'--no-external-downloader',
+			// Retry on network errors (helps with "Bad file descriptor" errors on network mounts)
+			'--retries',
+			'10',
+			'--fragment-retries',
+			'10',
 		];
 
 		// Add verbose flag if debug mode is enabled
