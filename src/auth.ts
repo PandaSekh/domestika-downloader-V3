@@ -68,7 +68,7 @@ export class DomestikaAuth {
 		const answers = await promptWithTimeout(
 			promptPromise,
 			30000, // 30 seconds
-			{},
+			{ domestika_session: undefined, credentials: undefined },
 			'No response received within 30 seconds. Defaulting to "no" (cookies not updated).'
 		);
 

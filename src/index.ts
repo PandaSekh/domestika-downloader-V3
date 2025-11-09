@@ -2,18 +2,20 @@ import * as fs from 'node:fs';
 import inquirer from 'inquirer';
 // Parse CLI args before loading dotenv so CLI args can override .env values
 import { parseCliArgs } from './utils/cli-args';
+
 parseCliArgs();
 // Now load dotenv (CLI args will override any .env values)
 import 'dotenv/config';
 // Parse CLI args again to ensure they override dotenv values
 parseCliArgs();
+
 import domestikaAuth from './auth';
 import { readInputCSV } from './csv/input';
 import { loadProgress, saveProgress } from './csv/progress';
 import { scrapeSite } from './scraper/scraper';
 import type { CourseToProcess, InquirerAnswers } from './types';
-import { debugLog } from './utils/debug';
 import { getFilteredCliArgs } from './utils/cli-args';
+import { debugLog } from './utils/debug';
 import { getN3u8DLPath } from './utils/paths';
 import { generateReportData, saveReports } from './utils/reports';
 import { parseSubtitleLanguages } from './utils/subtitles';
@@ -90,62 +92,63 @@ export async function main(): Promise<void> {
 				console.log(`  Subtitles: ${parsedSubtitles ? parsedSubtitles.join(', ') : 'None'}`);
 				console.log(`  Download Option: ${downloadOption}`);
 			} else {
-			// Ask user for options interactively
-			answers = await inquirer.prompt<InquirerAnswers>([
-				{
-					type: 'input' as const,
-					name: 'courseUrls',
-					message: 'Course URLs (separated by spaces):',
-					validate: (input: string) => {
-						const urls = input.trim().split(' ');
-						const validUrls = urls.every((url) => {
-							// Verify that it's a Domestika course URL
-							return url.match(/domestika\.org\/.*?\/courses\/\d+[-\w]+/);
-						});
-						if (validUrls) {
-							return true;
-						}
-						return 'Please enter valid Domestika course URLs';
+				// Ask user for options interactively
+				answers = await inquirer.prompt<InquirerAnswers>([
+					{
+						type: 'input' as const,
+						name: 'courseUrls',
+						message: 'Course URLs (separated by spaces):',
+						validate: (input: string) => {
+							const urls = input.trim().split(' ');
+							const validUrls = urls.every((url) => {
+								// Verify that it's a Domestika course URL
+								return url.match(/domestika\.org\/.*?\/courses\/\d+[-\w]+/);
+							});
+							if (validUrls) {
+								return true;
+							}
+							return 'Please enter valid Domestika course URLs';
+						},
 					},
-				},
-				{
-					type: 'checkbox' as const,
-					name: 'subtitles',
-					message: 'Select subtitle languages (space to select, enter to confirm):',
-					choices: [
-						{ name: 'Spanish', value: 'es' },
-						{ name: 'English', value: 'en' },
-						{ name: 'Portuguese', value: 'pt' },
-						{ name: 'French', value: 'fr' },
-						{ name: 'German', value: 'de' },
-						{ name: 'Italian', value: 'it' },
-					],
-				},
-				{
-					type: 'list' as const,
-					name: 'downloadOption',
-					message: 'What do you want to download?',
-					choices: [
-						{ name: 'Entire course', value: 'all' },
-						{ name: 'Specific videos', value: 'specific' },
-					],
-				},
-			]);
+					{
+						type: 'checkbox' as const,
+						name: 'subtitles',
+						message: 'Select subtitle languages (space to select, enter to confirm):',
+						choices: [
+							{ name: 'Spanish', value: 'es' },
+							{ name: 'English', value: 'en' },
+							{ name: 'Portuguese', value: 'pt' },
+							{ name: 'French', value: 'fr' },
+							{ name: 'German', value: 'de' },
+							{ name: 'Italian', value: 'it' },
+						],
+					},
+					{
+						type: 'list' as const,
+						name: 'downloadOption',
+						message: 'What do you want to download?',
+						choices: [
+							{ name: 'Entire course', value: 'all' },
+							{ name: 'Specific videos', value: 'specific' },
+						],
+					},
+				]);
 
-			// Convert interactive answers to course format
-			const urls = answers?.courseUrls.trim().split(' ');
-			coursesToProcess = urls.map((url) => {
-				const normalized = normalizeDomestikaUrl(url);
-				// Convert array to null if empty, otherwise use the array
-				const subtitleArray =
-					answers?.subtitles && answers.subtitles.length > 0 ? answers.subtitles : null;
-				return {
-					url: normalized.url,
-					courseTitle: normalized.courseTitle,
-					subtitles: subtitleArray,
-					downloadOption: answers?.downloadOption || 'all',
-				};
-			});
+				// Convert interactive answers to course format
+				const urls = answers?.courseUrls.trim().split(' ');
+				coursesToProcess = urls.map((url) => {
+					const normalized = normalizeDomestikaUrl(url);
+					// Convert array to null if empty, otherwise use the array
+					const subtitleArray =
+						answers?.subtitles && answers.subtitles.length > 0 ? answers.subtitles : null;
+					return {
+						url: normalized.url,
+						courseTitle: normalized.courseTitle,
+						subtitles: subtitleArray,
+						downloadOption: answers?.downloadOption || 'all',
+					};
+				});
+			}
 		}
 
 		// Check N_m3u8DL-RE
@@ -218,7 +221,7 @@ export async function main(): Promise<void> {
 		try {
 			const reportData = generateReportData(startTime);
 			saveReports(reportData);
-		} catch (reportError) {
+		} catch (_reportError) {
 			// Ignore report generation errors
 		}
 		process.exit(1);

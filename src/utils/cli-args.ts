@@ -76,4 +76,3 @@ export function getFilteredCliArgs(): string[] {
 
 	return filtered;
 }
-

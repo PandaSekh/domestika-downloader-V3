@@ -35,61 +35,16 @@ export interface ReportData {
 }
 
 /**
- * Load video stats from progress.csv
- */
-function loadVideoStats(): VideoStats[] {
-	const progressFile = 'progress.csv';
-	if (!fs.existsSync(progressFile)) {
-		return [];
-	}
-
-	try {
-		const content = fs.readFileSync(progressFile, 'utf-8');
-		const records = csvParseSync(content, {
-			columns: true,
-			skip_empty_lines: true,
-			trim: true,
-		}) as Record<string, string>[];
-
-		return records
-			.filter((row) => {
-				// Only include video-level entries (have unitNumber and videoIndex)
-				return row.unitNumber && row.videoIndex;
-			})
-			.map((row) => ({
-				unitNumber: Number.parseInt(row.unitNumber, 10),
-				unitTitle: row.unitTitle || '',
-				videoIndex: Number.parseInt(row.videoIndex, 10),
-				videoTitle: row.videoTitle || '',
-				status: row.status || 'unknown',
-				retryCount: Number.parseInt(row.retryCount || '0', 10),
-				timestamp: row.timestamp || undefined,
-			}));
-	} catch (error) {
-		const err = error as Error;
-		console.warn(`Warning: Could not read progress.csv for report: ${err.message}`);
-		return [];
-	}
-}
-
-/**
  * Generate report data from progress.csv
  */
 export function generateReportData(startTime: number): ReportData {
 	const endTime = Date.now();
 	const duration = Math.round((endTime - startTime) / 1000);
 
-	const videoStats = loadVideoStats();
-
 	// Group by course
 	const coursesMap = new Map<string, CourseStats>();
 
-	// Process video stats
-	for (const video of videoStats) {
-		// We need to get course info from progress.csv
-		// For now, we'll group by a key - we'll need to enhance this
-		// Let's read the full CSV to get course info
-	}
+	// Read full CSV to get course and video info
 
 	// Read full CSV to get course and video info
 	const progressFile = 'progress.csv';
@@ -121,7 +76,8 @@ export function generateReportData(startTime: number): ReportData {
 			});
 		}
 
-		const course = coursesMap.get(url)!;
+		const course = coursesMap.get(url);
+		if (!course) continue;
 
 		// If it's a video-level entry
 		if (record.unitNumber && record.videoIndex) {
@@ -362,4 +318,3 @@ export function saveReports(data: ReportData): void {
 	console.log(`   HTML: ${htmlPath}`);
 	console.log(`   JSON: ${jsonPath}`);
 }
-

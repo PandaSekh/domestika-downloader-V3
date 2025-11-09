@@ -25,7 +25,7 @@ function getMaxRetryAttempts(): number {
  */
 function getBackoffWaitTime(attempt: number): number {
 	const maxWaitMs = 5 * 60 * 1000; // 5 minutes
-	const exponentialWait = Math.pow(2, attempt) * 1000; // 2^attempt seconds in ms
+	const exponentialWait = 2 ** attempt * 1000; // 2^attempt seconds in ms
 	return Math.min(exponentialWait, maxWaitMs);
 }
 
@@ -138,7 +138,6 @@ export async function downloadVideo(
 		const maxRetries = getMaxRetryAttempts();
 		let retryCount = 0;
 		let downloadSuccess = false;
-		let lastError: Error | null = null;
 
 		// Retry loop with exponential backoff
 		while (retryCount <= maxRetries && !downloadSuccess) {
@@ -160,7 +159,7 @@ export async function downloadVideo(
 
 				await executeWithProgress(N_M3U8DL_RE, args1080p, vData.title, multiBar);
 				downloadSuccess = true;
-			} catch (error1080p) {
+			} catch (_error1080p) {
 				// If 1080p fails, try with best
 				try {
 					const argsBest = [
@@ -182,7 +181,6 @@ export async function downloadVideo(
 				} catch (errorBest) {
 					// Both attempts failed
 					const err = errorBest as Error;
-					lastError = err;
 
 					// If we haven't exceeded max retries, wait and retry
 					if (retryCount < maxRetries) {

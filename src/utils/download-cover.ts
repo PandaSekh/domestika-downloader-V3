@@ -107,4 +107,3 @@ export async function downloadCoverImage(
 		// Don't throw - cover image download failure shouldn't break the download process
 	}
 }
-

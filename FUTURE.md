@@ -9,19 +9,10 @@ This document outlines potential UX improvements and features that could be adde
 ## Download Management
 
 ### Retry Mechanism
-- Add configurable retry for failed downloads with exponential backoff
-- Allow users to specify max retry attempts
+- Add configurable retry for failed downloads with exponential backoff (max 5 minute of wait at the last attempt)
+- Allow users to specify max retry attempts (default is 5)
 - Track retry attempts in progress.csv
-
-### Resume Capability
-- Better handling of interrupted downloads
-- Check for partial files before redownloading
-- Resume from where download stopped
-
-### Batch Operations
-- Add "retry all failed" command
-- Batch download management interface
-- Queue management (pause/resume entire queue)
+- If cookies are not found, when requesting to the user what to do, after 30 seconds of inactivity default to "no" (tell the user in the log)
 
 ## User Experience
 
@@ -31,20 +22,13 @@ This document outlines potential UX improvements and features that could be adde
 - Real-time download speed and ETA
 
 ### Summary Reports
-- Generate downloadable HTML/JSON report after completion
+- Generate HTML/JSON report after completion, in a .reports folder
 - Include download statistics, failed items
-
-## Platform Support
 
 ## Developer Experience
 
 ### CLI Improvements
-- Better CLI argument parsing
-- Configuration via command-line flags
+- all .env args can be passed as cli args for a temporary override. the flags avaialble should be the same 
 
 ## Quality of Life
-
-- Auto-detect available subtitle languages
-- Auto-select best quality
-- Smart retry with different options on failure
 - Download cover image

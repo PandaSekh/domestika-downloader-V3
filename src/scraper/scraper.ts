@@ -13,6 +13,41 @@ import { promptWithTimeout } from '../utils/prompt-timeout';
 import { loadCourseMetadata, saveCourseMetadata } from './cache';
 import { getInitialProps } from './video-data';
 
+/**
+ * Safely close browser and page, handling connection errors gracefully
+ */
+async function safeBrowserCleanup(
+	page: Awaited<ReturnType<Awaited<ReturnType<typeof puppeteer.launch>>['newPage']>> | null,
+	browser: Awaited<ReturnType<typeof puppeteer.launch>> | null,
+	requestHandler: ((req: HTTPRequest) => void) | null
+): Promise<void> {
+	if (page && requestHandler) {
+		try {
+			page.off('request', requestHandler);
+			await page.setRequestInterception(false);
+		} catch (error) {
+			// Connection may already be closed, ignore cleanup errors
+			debugLog(`[CLEANUP] Error removing request handler: ${(error as Error).message}`);
+		}
+	}
+	if (page) {
+		try {
+			await page.close();
+		} catch (error) {
+			// Connection may already be closed, ignore cleanup errors
+			debugLog(`[CLEANUP] Error closing page: ${(error as Error).message}`);
+		}
+	}
+	if (browser) {
+		try {
+			await browser.close();
+		} catch (error) {
+			// Connection may already be closed, ignore cleanup errors
+			debugLog(`[CLEANUP] Error closing browser: ${(error as Error).message}`);
+		}
+	}
+}
+
 export async function scrapeSite(
 	courseUrl: string,
 	subtitle_langs: string[] | null,
@@ -72,12 +107,7 @@ export async function scrapeSite(
 		}
 
 		// Clean up browser
-		if (page && requestHandler) {
-			page.off('request', requestHandler);
-			await page.setRequestInterception(false);
-		}
-		if (page) await page.close();
-		if (browser) await browser.close();
+		await safeBrowserCleanup(page, browser, requestHandler);
 		page = null;
 		browser = null;
 		requestHandler = null;
@@ -120,12 +150,7 @@ export async function scrapeSite(
 		// Check if we're on the correct page
 		if (units.length === 0) {
 			// Remove request interception listener before closing
-			if (page && requestHandler) {
-				page.off('request', requestHandler);
-				await page.setRequestInterception(false);
-			}
-			if (page) await page.close();
-			if (browser) await browser.close();
+			await safeBrowserCleanup(page, browser, requestHandler);
 
 			console.log('\n❌ No videos found. This may be due to invalid cookies.');
 
@@ -191,12 +216,7 @@ export async function scrapeSite(
 		}
 
 		// Remove request interception listener before closing
-		if (page && requestHandler) {
-			page.off('request', requestHandler);
-			await page.setRequestInterception(false);
-		}
-		if (page) await page.close();
-		if (browser) await browser.close();
+		await safeBrowserCleanup(page, browser, requestHandler);
 	}
 
 	// If user chose to download specific videos
@@ -309,12 +329,7 @@ export async function scrapeSite(
 		}
 
 		// Clean up browser if it was opened
-		if (page && requestHandler) {
-			page.off('request', requestHandler);
-			await page.setRequestInterception(false);
-		}
-		if (page) await page.close();
-		if (browser) await browser.close();
+		await safeBrowserCleanup(page, browser, requestHandler);
 		return;
 	}
 
@@ -530,11 +545,6 @@ export async function scrapeSite(
 		}
 	}
 
-	// Clean up browser if it was opened
-	if (page && requestHandler) {
-		page.off('request', requestHandler);
-		await page.setRequestInterception(false);
-	}
-	if (page) await page.close();
-	if (browser) await browser.close();
+	// Clean up browser if it was opened (handle connection errors gracefully)
+	await safeBrowserCleanup(page, browser, requestHandler);
 }
