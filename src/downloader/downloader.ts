@@ -73,9 +73,8 @@ export async function downloadVideo(
 		throw new Error(`Invalid video URL for ${vData.title}`);
 	}
 
-	const cleanPath = (p: string) => p.replace(/\/+/g, '/');
 	const baseDownloadPath = getDownloadPath();
-	const finalDir = cleanPath(
+	const finalDir = path.normalize(
 		path.join(baseDownloadPath, courseTitle || 'Unknown Course', vData.section, unitTitle)
 	);
 

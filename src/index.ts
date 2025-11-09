@@ -23,15 +23,6 @@ function logMemoryUsage(label: string): void {
 // Main function
 export async function main(): Promise<void> {
 	try {
-		// Check OS compatibility
-		if (process.platform === 'win32') {
-			console.error('Windows not supported.');
-			process.exit(1);
-		}
-
-		const osName =
-			process.platform === 'darwin' ? 'macOS' : process.platform === 'linux' ? 'Linux' : 'Unix';
-		console.log('Operating system detected:', osName);
 		console.log('Starting Domestika Downloader...');
 
 		// Get credentials

@@ -1,8 +1,8 @@
 # Domestika Course Downloader V3
 
-![Version](https://img.shields.io/badge/version-3.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-3.1.0-blue.svg)
 ![License](https://img.shields.io/badge/license-ISC-green.svg)
-![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)
+![Node](https://img.shields.io/badge/node-%3E%3D22-brightgreen.svg)
 
 A tool to download Domestika courses you have purchased. This version is tested on macOS and Linux/Unix systems.
 

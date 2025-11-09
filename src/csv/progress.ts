@@ -78,9 +78,8 @@ export async function checkVideoFileExists(
 	videoTitle: string,
 	section: string
 ): Promise<string | null> {
-	const cleanPath = (p: string) => p.replace(/\/+/g, '/');
 	const baseDownloadPath = getDownloadPath();
-	const finalDir = cleanPath(
+	const finalDir = path.normalize(
 		path.join(baseDownloadPath, courseTitle || 'Unknown Course', section, unitTitle)
 	);
 
