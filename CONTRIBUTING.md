@@ -28,22 +28,18 @@ Thank you for your interest in contributing! This document provides guidelines a
    ```bash
    npm install
    ```
-4. Set up Husky (git hooks):
-   ```bash
-   npm run prepare
-   ```
-5. Create `.env` file:
+4. Create `.env` file:
    ```bash
    cp .env.example .env
    ```
    Then add your Domestika cookies to `.env` (see README.md for instructions)
 
-6. Build the project:
+5. Build the project:
    ```bash
    npm run build
    ```
 
-7. Run the project:
+6. Run the project:
    ```bash
    npm start
    ```
