@@ -13,7 +13,8 @@ interface CacheFile {
 	[normalizedCourseUrl: string]: CachedCourseMetadata;
 }
 
-const CACHE_FILE = path.join(process.cwd(), 'course-metadata-cache.json');
+const CACHE_DIR = path.join(process.cwd(), '.cache');
+const CACHE_FILE = path.join(CACHE_DIR, 'course-metadata-cache.json');
 const DEFAULT_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
 
 /**
@@ -60,6 +61,10 @@ function loadCacheFile(): CacheFile {
  */
 function saveCacheFile(cache: CacheFile): void {
 	try {
+		// Ensure cache directory exists
+		if (!fs.existsSync(CACHE_DIR)) {
+			fs.mkdirSync(CACHE_DIR, { recursive: true });
+		}
 		fs.writeFileSync(CACHE_FILE, JSON.stringify(cache, null, 2), 'utf-8');
 	} catch (error) {
 		const err = error as Error;

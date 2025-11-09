@@ -1,0 +1,872 @@
+{
+  "https://www.domestika.org/es/courses/4374/course": {
+    "metadata": [
+      {
+        "title": "U1- Introduzione",
+        "videoData": [
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/060/415/e1e11bb28fcebb229604674479d4d561/master.m3u8?1762696469",
+            "title": "Presentazione",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/060/419/c6d2ec43dc1626e46272a1bd6acfe593/master.m3u8?1762695077",
+            "title": "Fonti di ispirazione",
+            "section": ""
+          }
+        ],
+        "unitNumber": 1
+      },
+      {
+        "title": "U2- I fondamenti della scena e della sceneggiatura",
+        "videoData": [
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/060/422/aa729bfb15aa70795141f9fcbbbad531/master.m3u8?1762701577",
+            "title": "La questione drammatica centrale",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/060/424/283e091df74d2e32a174d8d32a791034/master.m3u8?1762696556",
+            "title": "Personaggi e trama",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/060/428/7a77eff27da77ff9319e567325d101f0/master.m3u8?1762701449",
+            "title": "Affilare il dialogo",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/069/985/d59c34cd8732e3eb25a4626d84b9d96e/master.m3u8?1762694255",
+            "title": "Usando l'immaginazione: metafore",
+            "section": ""
+          }
+        ],
+        "unitNumber": 2
+      },
+      {
+        "title": "U3- Scrivere la sceneggiatura",
+        "videoData": [
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/070/526/013744abcfbe75657c39a3175d0381a1/master.m3u8?1762704934",
+            "title": "Scelta del modulo",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/060/435/3a75fcc9987e3737683bd107dd93a9d8/master.m3u8?1762693911",
+            "title": "La tua connessione con la storia",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/060/437/2c3922184bfdcac550c65331dea2db8b/master.m3u8?1762703502",
+            "title": "Sviluppo dei personaggi principali",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/060/438/1debada54fc7269f16df051c7221c05b/master.m3u8?1762699669",
+            "title": "Esplorare attraverso il dialogo",
+            "section": ""
+          }
+        ],
+        "unitNumber": 3
+      },
+      {
+        "title": "U4- Dare vita alla sceneggiatura",
+        "videoData": [
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/060/497/c2035cf2e79d02fcc00b49c14838c4ee/master.m3u8?1762706518",
+            "title": "Riscrittura e prova 1",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/060/442/17729b2fff9a5c94770f01a88d86bcfe/master.m3u8?1762698955",
+            "title": "Riscrittura e prova 2",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/060/444/c865468d5b854e6ada62b827330b4e42/master.m3u8?1762712464",
+            "title": "Idee da condividere",
+            "section": ""
+          }
+        ],
+        "unitNumber": 4
+      },
+      {
+        "title": "Progetto finale",
+        "videoData": [],
+        "unitNumber": 5
+      }
+    ],
+    "timestamp": 1762715745692,
+    "courseTitle": "Creative Writing For Film And Theater"
+  },
+  "https://www.domestika.org/es/courses/5634/course": {
+    "metadata": [
+      {
+        "title": "U1- Introduzione e influenze",
+        "videoData": [
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/470/c9e3feb5b749482c6be83ebe116310cb/master.m3u8?1736446824",
+            "title": "Introduzione",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/474/f7b08f76b5c3e418495638540ef0abec/master.m3u8?1735618123",
+            "title": "Influenze / Diario di Annie",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/075/320/84cb3f53f9ecafde66e35b8cc8901d19/master.m3u8?1761842488",
+            "title": "Influenze  / Shayda Campbell",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/475/c8b65699fc7ea2dc0b909093449fb365/master.m3u8?1735618162",
+            "title": "Influenze / Louie Chai",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/476/9640e0ac4b76373a05b0bf9b5fd7aff8/master.m3u8?1735618183",
+            "title": "Influenze / Kate Sutton",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/477/050171c40bc6ba51d49ea23a82131a66/master.m3u8?1735618265",
+            "title": "Influenze / Manon Pons",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/050/942/69b5b2e9a2c933df66c7e9e83efd7709/master.m3u8?1755722487",
+            "title": "Fonti di ispirazione / Hermen Lutje Berenbroek",
+            "section": ""
+          }
+        ],
+        "unitNumber": 1
+      },
+      {
+        "title": "U2- Introduzione al Bullet Journaling illustrato",
+        "videoData": [
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/478/57798e1b339c5fd5074c1aa6b7649f9b/master.m3u8?1735618291",
+            "title": "Materiali",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/479/31842fbe18cc8a39527abe75b97575c9/master.m3u8?1735618303",
+            "title": "Tutto sulle riviste",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/480/f7ed6b50ac60bbe9ebef312dde0c0fb4/master.m3u8?1735618321",
+            "title": "Come possono essere utilizzati i diari",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/483/538853d5a7f902e4efc81a8e3a8bac33/master.m3u8?1735618407",
+            "title": "Registro futuro",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/482/4164585c0fdf7fcf41abeb72e4872ac3/master.m3u8?1735618395",
+            "title": "Calendario mensile, registro ed elenco attività 1",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/484/88c3d1a22145d80c128cd8e62834fa30/master.m3u8?1735618425",
+            "title": "Calendario mensile, registro ed elenco attività 2",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/485/689a82fb1b8513d8b4d7ade847805b89/master.m3u8?1735618450",
+            "title": "Utilizzo di simboli, registri giornalieri e creazione di una chiave",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/486/a8c38e48e195ec416a99c200a98513e4/master.m3u8?1735618474",
+            "title": "Creazione di un registro settimanale",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/487/135ef8ea7a612ce44b948d5fd0aa03de/master.m3u8?1735618518",
+            "title": "Creazione di un tracker delle abitudini mensili",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/488/8db489603caa4b4be0f2f576bfaa52f2/master.m3u8?1735618538",
+            "title": "Creazione di una collezione personalizzata 1",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/489/327e372a47d7c033ff8698ebd34797d7/master.m3u8?1735618561",
+            "title": "Creazione di una collezione personalizzata 2",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/490/dcbcc43eabd6ba182f0fcf0aadba6708/master.m3u8?1735618583",
+            "title": "Pagina dei contenuti e migrazione",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/491/87cc2bfa43262a604d7ae7e57589fdf9/master.m3u8?1735618604",
+            "title": "Creazione di una pagina di copertina del diario",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/492/d80ee841bb5d495dbb3889fc31b59e61/master.m3u8?1735618828",
+            "title": "Mantenere una pratica di Bullet Journal e una pianificazione efficace",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/493/aa61738bbd76a7c5bb3c2c900a3e10f8/master.m3u8?1735618848",
+            "title": "Gestire gli errori",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/494/02ebc931d72d03df05c8c6bd424cdf1e/master.m3u8?1735618867",
+            "title": "Condividere i tuoi diari sui social media",
+            "section": ""
+          }
+        ],
+        "unitNumber": 2
+      },
+      {
+        "title": "U3- Da Principiante a Sketcher- Crea il tuo Primo Sketchbook",
+        "videoData": [
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/075/321/f8028d3d276ef6546dadb722249e5930/master.m3u8?1761844747",
+            "title": "Che cosa è scarabocchiare",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/075/322/403c75080fbc04c2e7e53ba7d415fc85/master.m3u8?1761843635",
+            "title": "Materiali",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/075/323/c54bfcd8fa2e23a9d0f70eaeed54c3c0/master.m3u8?1761847820",
+            "title": "Superare la paura di disegnare 1",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/075/324/8983a5d30392d04fd378c560b76bcf74/master.m3u8?1761890560",
+            "title": "Superare la paura di disegnare 2",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/075/325/a0df67bb262cd76a9e7ad87342a06459/master.m3u8?1761844659",
+            "title": "Superare la paura di disegnare 3",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/075/326/6be7a67a46a4359ba0fba077e3ef008d/master.m3u8?1761891332",
+            "title": "Superare la paura di disegnare 4",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/075/327/91b3c628fcecfcd846f085ea6470dad9/master.m3u8?1761858927",
+            "title": "Suggerimenti pratici per il taccuino 1",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/075/328/335c14e3e699a9636746a3705b239f67/master.m3u8?1761845055",
+            "title": "Suggerimenti pratici per il taccuino 2",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/075/329/8efccb90204e2eac89ab067fb9d6c579/master.m3u8?1761846721",
+            "title": "Suggerimenti pratici per il taccuino 3",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/075/330/07c1861d02305c2f4a57475e6da427e7/master.m3u8?1761844540",
+            "title": "Suggerimenti pratici per il taccuino 4",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/075/331/c5204ccb67b15876e2bf749c209f7365/master.m3u8?1761851058",
+            "title": "Scarabocchiare fiori 1",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/075/332/a85260297ee53e433743ab9da67486be/master.m3u8?1761859616",
+            "title": "Scarabocchiare fiori 2",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/075/333/47d71f666e875446bf6917b03ada6860/master.m3u8?1761849603",
+            "title": "Animali scarabocchiati",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/075/334/29a695422565eda5187978ee54d5c9fe/master.m3u8?1761848521",
+            "title": "Scarabocchiare oggetti",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/075/335/cbd9983fdae2acebb4e3bf80abf63141/master.m3u8?1761858502",
+            "title": "Persone che scarabocchiano",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/075/336/56ff9014ed613752137989ee59786655/master.m3u8?1761844744",
+            "title": "Aggiunta di ambienti",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/075/337/fcd65ebd306f0cbd49592b28906a2ae7/master.m3u8?1761842875",
+            "title": "Condividi la tua arte per costruire una comunità",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/075/338/d44e37e11d61d8c38753c92b5d20713a/master.m3u8?1761842117",
+            "title": "Arte per tutti",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/075/339/cefbff592f16d5f730b3e809bc6f79c8/master.m3u8?1761842010",
+            "title": "Arte meditativa",
+            "section": ""
+          }
+        ],
+        "unitNumber": 3
+      },
+      {
+        "title": "U4- Bullet Journaling creativo per la produttività",
+        "videoData": [
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/495/e9ae7aec37baaf62174b795620f026ff/master.m3u8?1735618893",
+            "title": "Perché hai bisogno di un Bullet Journal?",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/496/823c503e98eac2c318a0b0eacf4f658a/master.m3u8?1735619262",
+            "title": "Materiali",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/497/60fb5e48829badd2a18f59d6cd597ed7/master.m3u8?1735619281",
+            "title": "Esercizi e Lettering",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/498/5ecf2fff4d5cb9de17c3c915646293ef/master.m3u8?1735619307",
+            "title": "Apprendimento visivo e organizzazione",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/499/5bd8cb5f5caa18fdcee94c605253218a/master.m3u8?1735619334",
+            "title": "Tipi di pagina in base al tuo stile di vita",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/500/917eb7f65fb2892986e3e4f64afe4854/master.m3u8?1735619356",
+            "title": "Iniziare",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/501/0a454cf76b92c3a5e4d28ff678ec3b30/master.m3u8?1735619378",
+            "title": "La pagina del registro futuro",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/502/76b74583309318d7ec6823312cc087ea/master.m3u8?1735619400",
+            "title": "Progettare il tuo mese",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/503/17ff8a0d241e53b93c8b2414240a8161/master.m3u8?1735619421",
+            "title": "Le pagine settimanali",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/504/028471f9ab31d4802862a467cd0ec87d/master.m3u8?1735619450",
+            "title": "Creazione dei tracker richiesti",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/505/eb18045813c06b4cfa8e4fdffe8312cd/master.m3u8?1735619556",
+            "title": "Correggere gli errori",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/506/7af9db6eba0cf3b94db8fcbdf03e9bd1/master.m3u8?1735619576",
+            "title": "Il Bullet Journal nella tua routine quotidiana",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/507/eb30ce3ddf30af41e3ae48245a3a3474/master.m3u8?1735619598",
+            "title": "Condivisione sui social media",
+            "section": ""
+          }
+        ],
+        "unitNumber": 4
+      },
+      {
+        "title": "U5- Diario illustrato della vita- una pratica quotidiana consapevole",
+        "videoData": [
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/508/05a3e6fb7328a207806de5ea25b81df9/master.m3u8?1735619683",
+            "title": "Cos'è un diario di vita illustrato?",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/509/387bf64f7f6b9b641ffd476a944b19d0/master.m3u8?1735619703",
+            "title": "Materiali",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/510/04f9c911578a11c2a42d62d839ac859f/master.m3u8?1735619721",
+            "title": "Ispirazione",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/511/dbb1fd7025a34ab224f6656c61d2e639/master.m3u8?1735619743",
+            "title": "Disegno e linguaggio visivo",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/512/0b09fe761f427217a27ce6ca34a69601/master.m3u8?1735619764",
+            "title": "Gratitudine quotidiana",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/513/4f82baf9e0ca6e26f5486107b8225711/master.m3u8?1735619784",
+            "title": "Cosa ho mangiato oggi",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/514/5058719644a77f420e3976bb79a7d684/master.m3u8?1735619808",
+            "title": "Cosa ho fatto o visto oggi",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/515/1224958f7487ea44f6f60e52b36d7247/master.m3u8?1735619826",
+            "title": "Visto durante la mia corsa/camminata",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/516/41d3b3c4d56b162e3b8ec7cc464f9339/master.m3u8?1735619845",
+            "title": "Cose che mi ispirano",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/517/029b0decc7beaca8c8bb32610c117937/master.m3u8?1735619861",
+            "title": "Digitalizzare e post-elaborare utilizzando Photoshop",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/518/126ec98bf7f687b62790f383bec6c601/master.m3u8?1735619898",
+            "title": "Come usare i social media e mantenere l'abitudine di tenere un diario",
+            "section": ""
+          }
+        ],
+        "unitNumber": 5
+      },
+      {
+        "title": "U6- Bullet Journaling- Pianificazione illustrata",
+        "videoData": [
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/519/52b3f2f779baa592d626d2ec7886f161/master.m3u8?1735619928",
+            "title": "Materiali",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/520/2d82c0dfdba946c1d0ad3f53e033d8fb/master.m3u8?1735619951",
+            "title": "Cos'è il Bullet Journaling?",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/521/4450953e10bc7c64c6d52a38c1c49c8a/master.m3u8?1735619973",
+            "title": "Pagina chiave, guida alla griglia e registro futuro",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/522/81ac88fa0732df9baa4813218b915038/master.m3u8?1735619989",
+            "title": "Esercizi di acquerello",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/523/5070dcc2e920063405408b6ad78e4c36/master.m3u8?1735620014",
+            "title": "Ricerca di idee",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/524/41a79f3989f165bc99d23956b6cb3aff/master.m3u8?1735620179",
+            "title": "Abbozzare e creare la copertina",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/525/277d493cdab14eed12c84ece93c8e6e9/master.m3u8?1735620207",
+            "title": "Il registro mensile",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/526/a2dbf40621ff3d2d42f71738d5842af4/master.m3u8?1735620227",
+            "title": "La pagina del Tracker 1",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/527/3d6710cbbce79333061ed0856f4bab10/master.m3u8?1735620245",
+            "title": "La pagina del Tracker 2",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/528/9d8c9e6f23739c7dc18a5846e3290ef8/master.m3u8?1735620263",
+            "title": "Il registro settimanale 1",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/529/157801a442662a0e0f697e66c9dee8fb/master.m3u8?1735620284",
+            "title": "Il registro settimanale 2",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/530/63edfd02481365f859aa0e6e1b9099ac/master.m3u8?1735620305",
+            "title": "Godersi il diario",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/531/22283a5719c91f0d6808a9176a271d8b/master.m3u8?1735620324",
+            "title": "Condividere il tuo lavoro",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/076/532/0ae1e3e4b5a537470d3ef2b76e0d9b36/master.m3u8?1735620345",
+            "title": "Correggere gli errori",
+            "section": ""
+          }
+        ],
+        "unitNumber": 6
+      },
+      {
+        "title": "U7- Visual thinking- organizza e presenta idee d'impatto",
+        "videoData": [
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/050/943/599272b7dd755742603273c2330dae38/master.m3u8?1755722057",
+            "title": "Introduzione al visual thinking",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/050/944/38f0ab7a7ec98ed1f5717e72c01dee43/master.m3u8?1755722698",
+            "title": "Riscaldare il tuo cervello visivo",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/050/945/85ef82674898274095f632f72e204cb1/master.m3u8?1755722520",
+            "title": "Introduzione al disegno",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/050/946/25d3f69c6fc0440a7e6ee121745ea780/master.m3u8?1755723879",
+            "title": "Padroneggiare le abilità di disegno di base",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/050/947/85eead0f34b4c89d759443cc383a8ed6/master.m3u8?1755721505",
+            "title": "Migliorare le tue abilità di disegno",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/050/948/8155b6bdc64f567aa8fe80aae4032063/master.m3u8?1755721888",
+            "title": "Strutture della storia",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/050/949/753b0b07b52dc61d34fc396de098331e/master.m3u8?1755721694",
+            "title": "Iniziare con la presentazione visiva",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/050/950/b89c099fd151ef60e31389406dfed6b1/master.m3u8?1755722699",
+            "title": "Esplorando il pubblico",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/050/951/07be575babb429cbd8bda57dcc855622/master.m3u8?1755723972",
+            "title": "Strutture della storia e concetti visivi",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/050/952/741a9b4235fe252410c595ef4a204775/master.m3u8?1755725021",
+            "title": "Suggerimenti per la presentazione",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/050/953/032925cd3117e8e7357088d73ad458e1/master.m3u8?1755725198",
+            "title": "Strumenti digitali per disegnare e organizzare le informazioni visivamente 1",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/050/954/29a7ece5d4ce75232c35ad69f6697932/master.m3u8?1755723771",
+            "title": "Strumenti digitali per disegnare e organizzare le informazioni visivamente 2",
+            "section": ""
+          }
+        ],
+        "unitNumber": 7
+      },
+      {
+        "title": "Progetto finale",
+        "videoData": [],
+        "unitNumber": 8
+      }
+    ],
+    "timestamp": 1762715761444,
+    "courseTitle": "Illustrated Creative Journal Specialization"
+  },
+  "https://www.domestika.org/es/courses/3667/course": {
+    "metadata": [
+      {
+        "title": "U1- Introduzione",
+        "videoData": [
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/053/333/211f8c049163cc71d6249f707f3d536a/master.m3u8?1750152049",
+            "title": "Presentazione",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/053/334/ff03d9f813e9c5f0e4aa7cc843b09b5e/master.m3u8?1750152064",
+            "title": "Fonti d'ispirazione",
+            "section": ""
+          }
+        ],
+        "unitNumber": 1
+      },
+      {
+        "title": "U2- Le storie",
+        "videoData": [
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/053/335/fdd0d070a062bab8fb1c19345f59f4d3/master.m3u8?1750152078",
+            "title": "Strumenti di script di base",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/053/336/1e7ba09d3369c103b325f9769f6a407b/master.m3u8?1750152097",
+            "title": "I generi cinematografici",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/053/337/9018e1cbb17509f14acc1ba155dfb5bc/master.m3u8?1750152113",
+            "title": "Come guardare un film analiticamente",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/053/338/2b1651e61c8eda3ab38ed2fd1f3f74f3/master.m3u8?1750152126",
+            "title": "L'idea",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/053/339/d2639b6563dd50d72de0ae9cab25a781/master.m3u8?1750152142",
+            "title": "Caratteri",
+            "section": ""
+          }
+        ],
+        "unitNumber": 2
+      },
+      {
+        "title": "U3- La struttura del film",
+        "videoData": [
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/053/340/278a7dc1b01fd6d1f4bbe8a2a53f38bc/master.m3u8?1750152154",
+            "title": "Primo atto: l'approccio",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/053/341/4442c1b0f979539e3f5db0f02e88b6f4/master.m3u8?1750152167",
+            "title": "Secondo atto: sviluppa il punto medio e il secondo giro",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/053/342/5242b36a0bf7c2a6db825dcf47e37578/master.m3u8?1750152178",
+            "title": "Terzo atto: climax e epilogo",
+            "section": ""
+          }
+        ],
+        "unitNumber": 3
+      },
+      {
+        "title": "U4- Scrivere",
+        "videoData": [
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/053/343/6f605b66c7b797c16ef87afc66162ef4/master.m3u8?1750152189",
+            "title": "Elementi narrativi: punto di vista, temporalità e spazio",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/053/344/7d1625b6afa3043f7cee1add8eab7656/master.m3u8?1750152201",
+            "title": "La sinossi della trama",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/053/345/4654ddcd52b489faabc1164c3d0676f0/master.m3u8?1750152212",
+            "title": "Riferimenti visivi",
+            "section": ""
+          }
+        ],
+        "unitNumber": 4
+      },
+      {
+        "title": "U5- Stile e marchi di vendita",
+        "videoData": [
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/053/346/e6a43cb937d25fbe9b932bbbcc7e58a0/master.m3u8?1750152224",
+            "title": "Singolare un progetto: segni di stile",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/053/347/b6a0ae7484f1a8fa0e47fcfd4190c2e3/master.m3u8?1750152235",
+            "title": "Come vendere il progetto",
+            "section": ""
+          }
+        ],
+        "unitNumber": 5
+      },
+      {
+        "title": "Progetto finale",
+        "videoData": [],
+        "unitNumber": 6
+      }
+    ],
+    "timestamp": 1762715769851,
+    "courseTitle": "Introduction To Screenwriting For Film"
+  },
+  "https://www.domestika.org/es/courses/1832/course": {
+    "metadata": [
+      {
+        "title": "U1- introduzione",
+        "videoData": [
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/037/850/ba4fdbf155d57f6318ff8906ff8b26c4/master.m3u8?1755814851",
+            "title": "Presentazione",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/037/851/879552967d3b43b1c047c0ecda73ab53/master.m3u8?1755812073",
+            "title": "Influenze",
+            "section": ""
+          }
+        ],
+        "unitNumber": 1
+      },
+      {
+        "title": "U2- La narrazione",
+        "videoData": [
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/037/852/a8fa63dac94e1d18c94fbbfca51b198e/master.m3u8?1755815899",
+            "title": "Unità narrative",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/037/853/a0ae9210937387de4fd87954f10998a1/master.m3u8?1755813421",
+            "title": "Cosa dire e cosa no? Ellissi",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/037/854/0996e8f95495fabbdba556c66eaf7794/master.m3u8?1755813310",
+            "title": "Tipi di scena",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/037/855/5cb2dcc2c9de64d4e65a6e527961d8d9/master.m3u8?1755898431",
+            "title": "Sequenze specifiche",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/037/856/07a0455e74b84c6621bed1dd74a9a4ab/master.m3u8?1755814832",
+            "title": "Il quaderno della scena",
+            "section": ""
+          }
+        ],
+        "unitNumber": 2
+      },
+      {
+        "title": "U3- Elementi di scena",
+        "videoData": [
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/037/857/053cd2c339c4a73c9088f261e8b2a064/master.m3u8?1755909746",
+            "title": "Elementi di scena: il personaggio",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/037/858/a7799f14df75a0aa264de3a0d76e8fea/master.m3u8?1755814476",
+            "title": "Elementi di scena: l'impianto",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/037/859/98b025f75bdffed71bebd65137a5f185/master.m3u8?1755902305",
+            "title": "Elementi della scena: universo fisico",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/037/860/1ad61815bbc8be227761fc04cb443d65/master.m3u8?1755817339",
+            "title": "Il conflitto sulla scena",
+            "section": ""
+          }
+        ],
+        "unitNumber": 3
+      },
+      {
+        "title": "U4- Progettare le scene",
+        "videoData": [
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/037/861/c26360e1aac6668b9d25c52751a6ba95/master.m3u8?1755906360",
+            "title": "Assemblaggio del quaderno delle scene 1",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/037/862/fee31d5ca8866b0a6919780aea541c5d/master.m3u8?1755816368",
+            "title": "Assemblaggio del quaderno delle scene 2",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/037/863/8fd2ef7f7ed5f9833a4587995bebced7/master.m3u8?1755819980",
+            "title": "Lavorare sui modulatori della scena",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/037/864/1aec4e6d9756a5ff8f60c5050146aa9b/master.m3u8?1755934276",
+            "title": "Dissociazione armonica funzionante",
+            "section": ""
+          }
+        ],
+        "unitNumber": 4
+      },
+      {
+        "title": "U5- Scrivere",
+        "videoData": [
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/037/865/93114811545703b6bb9663ca3f75bde7/master.m3u8?1756028955",
+            "title": "Regole del formato di scrittura",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/037/866/8bca605a67690df1c2890b90c1c8f305/master.m3u8?1755813565",
+            "title": "Scene di scrittura",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/037/867/e681fb862fcc6c283a1b29f1adc84783/master.m3u8?1755815364",
+            "title": "Sceneggiatura",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/037/868/8e9406541977f9548317ed60755bb2d3/master.m3u8?1755814129",
+            "title": "Riscrittura e considerazioni finali 1",
+            "section": ""
+          },
+          {
+            "playbackURL": "https://cdn-videos.domestika.org/videos/000/037/869/478acadf2bbbc7ae04304513bc8442cc/master.m3u8?1755813290",
+            "title": "Riscrittura e considerazioni finali 2",
+            "section": ""
+          }
+        ],
+        "unitNumber": 5
+      },
+      {
+        "title": "Progetto finale",
+        "videoData": [],
+        "unitNumber": 6
+      }
+    ],
+    "timestamp": 1762715778901,
+    "courseTitle": "Writing Fictional Scenes And Sequences"
+  }
+}
