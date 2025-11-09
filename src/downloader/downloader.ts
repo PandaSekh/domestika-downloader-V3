@@ -10,6 +10,26 @@ import { getDownloadPath, getN3u8DLPath } from '../utils/paths';
 import { executeWithProgress } from './progress-bar';
 
 /**
+ * Get max retry attempts from environment variable (default: 5)
+ */
+function getMaxRetryAttempts(): number {
+	const maxRetryEnv = process.env.MAX_RETRY_ATTEMPTS
+		? Number.parseInt(process.env.MAX_RETRY_ATTEMPTS, 10)
+		: 5;
+	return Number.isNaN(maxRetryEnv) || maxRetryEnv < 1 ? 5 : maxRetryEnv;
+}
+
+/**
+ * Calculate exponential backoff wait time
+ * Formula: min(2^attempt * 1000ms, 5 minutes)
+ */
+function getBackoffWaitTime(attempt: number): number {
+	const maxWaitMs = 5 * 60 * 1000; // 5 minutes
+	const exponentialWait = Math.pow(2, attempt) * 1000; // 2^attempt seconds in ms
+	return Math.min(exponentialWait, maxWaitMs);
+}
+
+/**
  * Wait for a file to be fully written by checking if its size stabilizes
  */
 async function waitForFileComplete(
@@ -98,7 +118,8 @@ export async function downloadVideo(
 					unitTitle,
 					index,
 					vData.title,
-					'completed'
+					'completed',
+					0 // No retries needed for existing files
 				);
 				// Add to completed videos set for this session
 				const videoId = getVideoId(courseUrl, unitNumber, index);
@@ -113,46 +134,87 @@ export async function downloadVideo(
 		}
 
 		const fileName = `${courseTitle} - U${unitNumber} - ${index}_${vData.title.trimEnd()}`;
-
-		let downloadSuccess = false;
 		const N_M3U8DL_RE = getN3u8DLPath();
+		const maxRetries = getMaxRetryAttempts();
+		let retryCount = 0;
+		let downloadSuccess = false;
+		let lastError: Error | null = null;
 
-		try {
-			// Try first with 1080p
-			const args1080p = [
-				'-sv',
-				'res=1920x1080',
-				vData.playbackURL,
-				'--save-dir',
-				finalDir,
-				'--save-name',
-				fileName,
-				'--tmp-dir',
-				'.tmp',
-				'--log-level',
-				'INFO', // Keep INFO to get progress output for parsing
-			];
+		// Retry loop with exponential backoff
+		while (retryCount <= maxRetries && !downloadSuccess) {
+			try {
+				// Try first with 1080p
+				const args1080p = [
+					'-sv',
+					'res=1920x1080',
+					vData.playbackURL,
+					'--save-dir',
+					finalDir,
+					'--save-name',
+					fileName,
+					'--tmp-dir',
+					'.tmp',
+					'--log-level',
+					'INFO', // Keep INFO to get progress output for parsing
+				];
 
-			await executeWithProgress(N_M3U8DL_RE, args1080p, vData.title, multiBar);
-			downloadSuccess = true;
-		} catch (_error) {
-			// If 1080p fails, try with best
-			const argsBest = [
-				'-sv',
-				'for=best',
-				vData.playbackURL,
-				'--save-dir',
-				finalDir,
-				'--save-name',
-				fileName,
-				'--tmp-dir',
-				'.tmp',
-				'--log-level',
-				'INFO', // Keep INFO to get progress output for parsing
-			];
+				await executeWithProgress(N_M3U8DL_RE, args1080p, vData.title, multiBar);
+				downloadSuccess = true;
+			} catch (error1080p) {
+				// If 1080p fails, try with best
+				try {
+					const argsBest = [
+						'-sv',
+						'for=best',
+						vData.playbackURL,
+						'--save-dir',
+						finalDir,
+						'--save-name',
+						fileName,
+						'--tmp-dir',
+						'.tmp',
+						'--log-level',
+						'INFO', // Keep INFO to get progress output for parsing
+					];
 
-			await executeWithProgress(N_M3U8DL_RE, argsBest, vData.title, multiBar);
-			downloadSuccess = true;
+					await executeWithProgress(N_M3U8DL_RE, argsBest, vData.title, multiBar);
+					downloadSuccess = true;
+				} catch (errorBest) {
+					// Both attempts failed
+					const err = errorBest as Error;
+					lastError = err;
+
+					// If we haven't exceeded max retries, wait and retry
+					if (retryCount < maxRetries) {
+						retryCount++;
+						const waitTime = getBackoffWaitTime(retryCount - 1);
+						const waitSeconds = Math.round(waitTime / 1000);
+						log(
+							`⚠️  Download failed for ${vData.title}, retrying in ${waitSeconds}s (attempt ${retryCount}/${maxRetries})...`,
+							multiBar
+						);
+						debugLog(`[RETRY] Waiting ${waitTime}ms before retry attempt ${retryCount}`);
+						await new Promise((resolve) => setTimeout(resolve, waitTime));
+					} else {
+						// Max retries exceeded, save progress with retry count and throw
+						if (courseUrl) {
+							saveVideoProgress(
+								courseUrl,
+								courseTitle,
+								unitNumber,
+								unitTitle,
+								index,
+								vData.title,
+								'failed',
+								retryCount
+							);
+						}
+						throw new Error(
+							`Failed to download video after ${retryCount} attempts: ${err.message}`
+						);
+					}
+				}
+			}
 		}
 
 		if (downloadSuccess) {
@@ -325,7 +387,7 @@ export async function downloadVideo(
 				}
 			}
 
-			// Save video progress after successful download
+			// Save video progress after successful download (include retry count)
 			if (courseUrl && completedVideos) {
 				saveVideoProgress(
 					courseUrl,
@@ -334,7 +396,8 @@ export async function downloadVideo(
 					unitTitle,
 					index,
 					vData.title,
-					'completed'
+					'completed',
+					retryCount
 				);
 				// Add to completed videos set for this session
 				const videoId = getVideoId(courseUrl, unitNumber, index);

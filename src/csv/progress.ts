@@ -172,8 +172,11 @@ function hasCsvHeader(filePath: string): boolean {
 	try {
 		const content = fs.readFileSync(filePath, 'utf-8');
 		const firstLine = content.split('\n')[0]?.trim();
+		// Support both old format (without retryCount) and new format (with retryCount)
 		return (
-			firstLine === 'url,courseTitle,unitNumber,unitTitle,videoIndex,videoTitle,status,timestamp'
+			firstLine === 'url,courseTitle,unitNumber,unitTitle,videoIndex,videoTitle,status,timestamp' ||
+			firstLine ===
+				'url,courseTitle,unitNumber,unitTitle,videoIndex,videoTitle,status,timestamp,retryCount'
 		);
 	} catch {
 		return false;
@@ -188,7 +191,8 @@ export function saveVideoProgress(
 	unitTitle: string,
 	videoIndex: number,
 	videoTitle: string,
-	status = 'completed'
+	status = 'completed',
+	retryCount = 0
 ): void {
 	const progressFile = 'progress.csv';
 	const normalized = normalizeDomestikaUrl(courseUrl);
@@ -208,16 +212,18 @@ export function saveVideoProgress(
 		videoTitle: videoTitle,
 		status: status,
 		timestamp: new Date().toISOString(),
+		retryCount: retryCount.toString(),
 	};
 
 	try {
 		// Check if file exists and has header
 		const fileExists = fs.existsSync(progressFile);
+		const hasHeader = hasCsvHeader(progressFile);
 
-		if (!fileExists || !hasCsvHeader(progressFile)) {
+		if (!fileExists || !hasHeader) {
 			// Write header if file doesn't exist or doesn't have proper header
 			const header =
-				'url,courseTitle,unitNumber,unitTitle,videoIndex,videoTitle,status,timestamp\n';
+				'url,courseTitle,unitNumber,unitTitle,videoIndex,videoTitle,status,timestamp,retryCount\n';
 			if (!fileExists) {
 				fs.writeFileSync(progressFile, header, 'utf-8');
 			} else {
@@ -237,6 +243,7 @@ export function saveVideoProgress(
 			`"${entry.videoTitle.replace(/"/g, '""')}"`,
 			`"${entry.status}"`,
 			`"${entry.timestamp}"`,
+			`"${entry.retryCount}"`,
 		].join(',')}\n`;
 
 		fs.appendFileSync(progressFile, csvRow, 'utf-8');
