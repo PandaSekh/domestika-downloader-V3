@@ -15,7 +15,7 @@ import { loadProgress, saveProgress } from './csv/progress';
 import { scrapeSite } from './scraper/scraper';
 import type { CourseToProcess, InquirerAnswers } from './types';
 import { getFilteredCliArgs } from './utils/cli-args';
-import { debugLog } from './utils/debug';
+import { logDebug, logError, logSuccess } from './utils/debug';
 import { getN3u8DLPath } from './utils/paths';
 import { generateReportData, saveReports } from './utils/reports';
 import { parseSubtitleLanguages } from './utils/subtitles';
@@ -25,7 +25,7 @@ import { normalizeDomestikaUrl } from './utils/url';
 function logMemoryUsage(label: string): void {
 	const usage = process.memoryUsage();
 	const formatMB = (bytes: number): string => (bytes / 1024 / 1024).toFixed(2);
-	debugLog(
+	logDebug(
 		`[MEMORY] ${label}: RSS=${formatMB(usage.rss)}MB, HeapUsed=${formatMB(usage.heapUsed)}MB, HeapTotal=${formatMB(usage.heapTotal)}MB, External=${formatMB(usage.external)}MB`
 	);
 }
@@ -45,7 +45,7 @@ export async function main(): Promise<void> {
 		let coursesToProcess: CourseToProcess[] = [];
 
 		if (csvCourses && csvCourses.length > 0) {
-			console.log(`\n📋 Found ${csvCourses.length} courses in input.csv`);
+			console.log(`\nFound ${csvCourses.length} courses in input.csv`);
 
 			// Convert CSV courses to the format expected by the processing loop
 			// We don't filter courses here anymore - we'll check individual videos during download
@@ -179,7 +179,7 @@ export async function main(): Promise<void> {
 		for (let i = 0; i < coursesToProcess.length; i++) {
 			const course = coursesToProcess[i];
 			console.log(
-				`\n📚 Processing course ${i + 1} of ${coursesToProcess.length}: ${course.courseTitle || course.url}`
+				`\nProcessing course ${i + 1} of ${coursesToProcess.length}: ${course.courseTitle || course.url}`
 			);
 			logMemoryUsage(`Before processing course ${i + 1}`);
 
@@ -198,18 +198,18 @@ export async function main(): Promise<void> {
 				);
 
 				logMemoryUsage(`After processing course ${i + 1}`);
-				console.log(`✅ Course processing completed: ${course.courseTitle || course.url}`);
+				logSuccess(`Course processing completed: ${course.courseTitle || course.url}`);
 			} catch (error) {
 				// Mark as failed
 				const err = error as Error;
 				saveProgress(course.url, course.courseTitle, 'failed');
-				console.error(`❌ Course failed: ${course.courseTitle || course.url} - ${err.message}`);
+				logError(`Course failed: ${course.courseTitle || course.url} - ${err.message}`);
 				logMemoryUsage(`After failed course ${i + 1}`);
 				// Continue with next course instead of stopping
 			}
 		}
 
-		console.log('\n✅ All courses have been processed');
+		logSuccess('\nAll courses have been processed');
 
 		// Generate reports
 		const reportData = generateReportData(startTime);

@@ -5,7 +5,7 @@ import type * as cliProgress from 'cli-progress';
 import { checkVideoFileExists, getVideoId, saveVideoProgress } from '../csv/progress';
 import { embedSubtitles } from '../subtitles/embed';
 import type { VideoData } from '../types';
-import { debugLog, log, logError } from '../utils/debug';
+import { logDebug, logError, logSuccess, logWarning } from '../utils/debug';
 import { getDownloadPath, getN3u8DLPath } from '../utils/paths';
 import { executeWithProgress } from './progress-bar';
 
@@ -187,11 +187,11 @@ export async function downloadVideo(
 						retryCount++;
 						const waitTime = getBackoffWaitTime(retryCount - 1);
 						const waitSeconds = Math.round(waitTime / 1000);
-						log(
-							`⚠️  Download failed for ${vData.title}, retrying in ${waitSeconds}s (attempt ${retryCount}/${maxRetries})...`,
+						logWarning(
+							`Download failed for ${vData.title}, retrying in ${waitSeconds}s (attempt ${retryCount}/${maxRetries})...`,
 							multiBar
 						);
-						debugLog(`[RETRY] Waiting ${waitTime}ms before retry attempt ${retryCount}`);
+						logDebug(`[RETRY] Waiting ${waitTime}ms before retry attempt ${retryCount}`);
 						await new Promise((resolve) => setTimeout(resolve, waitTime));
 					} else {
 						// Max retries exceeded, save progress with retry count and throw
@@ -241,8 +241,8 @@ export async function downloadVideo(
 							'ERROR', // Changed from OFF to ERROR to capture failures
 						];
 
-						debugLog(`[SUBTITLE] Downloading ${lang} subtitles for: ${vData.title}`);
-						debugLog(`[SUBTITLE] Command: ${N_M3U8DL_RE} ${subtitleArgs.join(' ')}`);
+						logDebug(`[SUBTITLE] Downloading ${lang} subtitles for: ${vData.title}`);
+						logDebug(`[SUBTITLE] Command: ${N_M3U8DL_RE} ${subtitleArgs.join(' ')}`);
 
 						await new Promise<void>((resolve, reject) => {
 							const subtitleProcess = spawn(N_M3U8DL_RE, subtitleArgs, {
@@ -287,8 +287,8 @@ export async function downloadVideo(
 							path.join(finalDir, `subtitle_${lang}.srt`),
 						];
 
-						debugLog(`[SUBTITLE] Searching for ${lang} subtitle file in: ${finalDir}`);
-						debugLog(`[SUBTITLE] Attempted paths: ${possibleSubPaths.join(', ')}`);
+						logDebug(`[SUBTITLE] Searching for ${lang} subtitle file in: ${finalDir}`);
+						logDebug(`[SUBTITLE] Attempted paths: ${possibleSubPaths.join(', ')}`);
 
 						let subPath: string | null = null;
 
@@ -296,7 +296,7 @@ export async function downloadVideo(
 						for (const possiblePath of possibleSubPaths) {
 							if (fs.existsSync(possiblePath)) {
 								subPath = possiblePath;
-								debugLog(`[SUBTITLE] Found ${lang} subtitle at: ${subPath}`);
+								logDebug(`[SUBTITLE] Found ${lang} subtitle at: ${subPath}`);
 								break;
 							}
 						}
@@ -304,7 +304,7 @@ export async function downloadVideo(
 						// If not found, search for any .srt file with the language code in the directory
 						if (!subPath) {
 							const files = fs.readdirSync(finalDir);
-							debugLog(`[SUBTITLE] Directory contains ${files.length} files`);
+							logDebug(`[SUBTITLE] Directory contains ${files.length} files`);
 							const srtFiles = files.filter(
 								(f) =>
 									f.endsWith('.srt') &&
@@ -312,9 +312,9 @@ export async function downloadVideo(
 							);
 							if (srtFiles.length > 0) {
 								subPath = path.join(finalDir, srtFiles[0]);
-								debugLog(`[SUBTITLE] Found ${lang} subtitle via search: ${subPath}`);
+								logDebug(`[SUBTITLE] Found ${lang} subtitle via search: ${subPath}`);
 							} else {
-								debugLog(
+								logDebug(
 									`[SUBTITLE] No ${lang} subtitle files found. Available .srt files: ${files.filter((f) => f.endsWith('.srt')).join(', ') || 'none'}`
 								);
 							}
@@ -329,13 +329,16 @@ export async function downloadVideo(
 								success: false,
 								error: 'Subtitle file not found after download',
 							});
-							log(`⚠️  ${lang.toUpperCase()} subtitles downloaded but file not found`, multiBar);
+							logWarning(`${lang.toUpperCase()} subtitles downloaded but file not found`, multiBar);
 						}
 					} catch (error) {
 						const err = error as Error;
 						subtitleResults.push({ lang, success: false, error: err.message });
-						log(`⚠️  Failed to download ${lang.toUpperCase()} subtitles: ${err.message}`, multiBar);
-						debugLog(`[SUBTITLE] Error details for ${lang}: ${err.stack}`);
+						logWarning(
+							`Failed to download ${lang.toUpperCase()} subtitles: ${err.message}`,
+							multiBar
+						);
+						logDebug(`[SUBTITLE] Error details for ${lang}: ${err.stack}`);
 					}
 				}
 
@@ -343,14 +346,14 @@ export async function downloadVideo(
 				const successful = subtitleResults.filter((r) => r.success).length;
 				const failed = subtitleResults.filter((r) => !r.success);
 				if (successful > 0) {
-					log(
-						`✅ Successfully downloaded ${successful} subtitle language(s) for ${vData.title}`,
+					logSuccess(
+						`Successfully downloaded ${successful} subtitle language(s) for ${vData.title}`,
 						multiBar
 					);
 				}
 				if (failed.length > 0) {
-					log(
-						`⚠️  Failed to download ${failed.length} subtitle language(s): ${failed.map((f) => f.lang).join(', ')}`,
+					logWarning(
+						`Failed to download ${failed.length} subtitle language(s): ${failed.map((f) => f.lang).join(', ')}`,
 						multiBar
 					);
 				}

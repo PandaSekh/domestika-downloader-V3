@@ -10,7 +10,7 @@ export async function promptWithTimeout<T extends Record<string, unknown>>(
 ): Promise<T> {
 	const timeoutPromise = new Promise<T>((resolve) => {
 		setTimeout(() => {
-			console.log(`\n⏱️  ${timeoutMessage}`);
+			console.log(`\n${timeoutMessage}`);
 			resolve(defaultValue);
 		}, timeoutMs);
 	});

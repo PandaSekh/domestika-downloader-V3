@@ -1,8 +1,31 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import type * as cheerio from 'cheerio';
-import { debugLog } from './debug';
+import { logDebug } from './debug';
 import { getDownloadPath } from './paths';
+
+/**
+ * Check if cover image exists for a course
+ */
+export function coverImageExists(courseTitle: string | null): boolean {
+	const baseDownloadPath = getDownloadPath();
+	const courseDir = path.join(baseDownloadPath, courseTitle || 'Unknown Course');
+
+	if (!fs.existsSync(courseDir)) {
+		return false;
+	}
+
+	// Check for common cover image extensions
+	const possibleExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
+	for (const ext of possibleExtensions) {
+		const coverPath = path.join(courseDir, `cover${ext}`);
+		if (fs.existsSync(coverPath)) {
+			return true;
+		}
+	}
+
+	return false;
+}
 
 /**
  * Extract cover image URL from course page HTML
@@ -66,7 +89,7 @@ export async function downloadCoverImage(
 		});
 
 		if (!response.ok) {
-			debugLog(`[COVER] Failed to download cover image: ${response.status} ${response.statusText}`);
+			logDebug(`[COVER] Failed to download cover image: ${response.status} ${response.statusText}`);
 			return;
 		}
 
@@ -100,10 +123,10 @@ export async function downloadCoverImage(
 
 		const coverPath = path.join(courseDir, `cover${extension}`);
 		fs.writeFileSync(coverPath, buffer);
-		debugLog(`[COVER] Downloaded cover image to: ${coverPath}`);
+		logDebug(`[COVER] Downloaded cover image to: ${coverPath}`);
 	} catch (error) {
 		const err = error as Error;
-		debugLog(`[COVER] Error downloading cover image: ${err.message}`);
+		logDebug(`[COVER] Error downloading cover image: ${err.message}`);
 		// Don't throw - cover image download failure shouldn't break the download process
 	}
 }

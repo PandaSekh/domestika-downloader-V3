@@ -2,7 +2,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { parse as csvParseSync } from 'csv-parse/sync';
 import { stringify as csvStringifySync } from 'csv-stringify/sync';
-import { debugLog } from '../utils/debug';
+import { logDebug } from '../utils/debug';
 import { getDownloadPath } from '../utils/paths';
 import { normalizeDomestikaUrl } from '../utils/url';
 
@@ -16,13 +16,13 @@ export function getVideoId(courseUrl: string, unitNumber: number, videoIndex: nu
 export function loadProgress(): Set<string> {
 	const progressFile = 'progress.csv';
 	if (!fs.existsSync(progressFile)) {
-		debugLog('[PROGRESS] progress.csv does not exist, starting with empty set');
+		logDebug('[PROGRESS] progress.csv does not exist, starting with empty set');
 		return new Set<string>();
 	}
 
 	try {
 		const stats = fs.statSync(progressFile);
-		debugLog(`[PROGRESS] Loading progress.csv (${(stats.size / 1024).toFixed(2)}KB)`);
+		logDebug(`[PROGRESS] Loading progress.csv (${(stats.size / 1024).toFixed(2)}KB)`);
 
 		const content = fs.readFileSync(progressFile, 'utf-8');
 		const records = csvParseSync(content, {
@@ -31,7 +31,7 @@ export function loadProgress(): Set<string> {
 			trim: true,
 		}) as Record<string, string>[];
 
-		debugLog(`[PROGRESS] Parsed ${records.length} records from CSV`);
+		logDebug(`[PROGRESS] Parsed ${records.length} records from CSV`);
 
 		// Create a set of completed video IDs (only count "completed" status)
 		const completed = new Set<string>();
@@ -60,7 +60,7 @@ export function loadProgress(): Set<string> {
 			}
 		}
 
-		debugLog(`[PROGRESS] Loaded ${completed.size} completed video IDs into memory`);
+		logDebug(`[PROGRESS] Loaded ${completed.size} completed video IDs into memory`);
 		return completed;
 	} catch (error) {
 		const err = error as Error;
