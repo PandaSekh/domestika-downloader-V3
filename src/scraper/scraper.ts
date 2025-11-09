@@ -8,6 +8,8 @@ import { isVideoCompleted } from '../csv/progress';
 import { downloadVideo } from '../downloader/downloader';
 import type { Unit, VideoSelection } from '../types';
 import { debugLog, logError, setActiveMultiBar } from '../utils/debug';
+import { downloadCoverImage, extractCoverImageUrl } from '../utils/download-cover';
+import { promptWithTimeout } from '../utils/prompt-timeout';
 import { loadCourseMetadata, saveCourseMetadata } from './cache';
 import { getInitialProps } from './video-data';
 
@@ -32,6 +34,53 @@ export async function scrapeSite(
 		allVideos = cachedMetadata;
 		console.log(`Course: ${courseTitle}`);
 		console.log(`${allVideos.length} Units loaded from cache`);
+
+		// Try to download cover image even when using cache (in case it wasn't downloaded before)
+		// We need to open a page to get the HTML
+		const puppeteerOptions: Parameters<typeof puppeteer.launch>[0] = {
+			headless: true,
+			args: ['--no-sandbox', '--disable-setuid-sandbox'],
+		};
+
+		browser = await puppeteer.launch(puppeteerOptions);
+		const context = browser.defaultBrowserContext();
+		await context.setCookie(...auth.cookies);
+		page = await browser.newPage();
+		page.setDefaultNavigationTimeout(0);
+
+		await page.setRequestInterception(true);
+		requestHandler = (req: HTTPRequest) => {
+			if (
+				req.resourceType() === 'stylesheet' ||
+				req.resourceType() === 'font' ||
+				req.resourceType() === 'image'
+			) {
+				req.abort();
+			} else {
+				req.continue();
+			}
+		};
+		page.on('request', requestHandler);
+
+		await page.goto(courseUrl);
+		const html = await page.content();
+		const $ = cheerio.load(html);
+
+		const coverImageUrl = extractCoverImageUrl($);
+		if (coverImageUrl) {
+			await downloadCoverImage(coverImageUrl, courseTitle, auth.cookies);
+		}
+
+		// Clean up browser
+		if (page && requestHandler) {
+			page.off('request', requestHandler);
+			await page.setRequestInterception(false);
+		}
+		if (page) await page.close();
+		if (browser) await browser.close();
+		page = null;
+		browser = null;
+		requestHandler = null;
 	} else {
 		debugLog(`[CACHE] Cache miss or expired for course: ${courseUrl}`);
 		// Configure Puppeteer
@@ -80,7 +129,7 @@ export async function scrapeSite(
 
 			console.log('\n❌ No videos found. This may be due to invalid cookies.');
 
-			const answer = await inquirer.prompt<{ updateCookies: boolean }>([
+			const promptPromise = inquirer.prompt<{ updateCookies: boolean }>([
 				{
 					type: 'confirm',
 					name: 'updateCookies',
@@ -88,6 +137,13 @@ export async function scrapeSite(
 					default: true,
 				},
 			]);
+
+			const answer = await promptWithTimeout(
+				promptPromise,
+				30000, // 30 seconds
+				{ updateCookies: false },
+				'No response received within 30 seconds. Defaulting to "no" (cookies not updated).'
+			);
 
 			if (answer.updateCookies) {
 				// Force credential update
@@ -127,6 +183,12 @@ export async function scrapeSite(
 		// Save to cache after successful scraping
 		saveCourseMetadata(courseUrl, allVideos, courseTitle);
 		debugLog(`[CACHE] Saved metadata to cache for course: ${courseUrl}`);
+
+		// Download cover image
+		const coverImageUrl = extractCoverImageUrl($);
+		if (coverImageUrl) {
+			await downloadCoverImage(coverImageUrl, courseTitle, auth.cookies);
+		}
 
 		// Remove request interception listener before closing
 		if (page && requestHandler) {
@@ -288,7 +350,7 @@ export async function scrapeSite(
 
 	// Create a MultiBar for parallel downloads to avoid progress bar conflicts
 	const multiBar = new cliProgress.MultiBar({
-		format: '  {title} |{bar}| {percentage}% | ETA: {eta}s',
+		format: '  {title} |{bar}| {percentage}% | {speed} | ETA: {eta} | {size}',
 		barCompleteChar: '\u2588',
 		barIncompleteChar: '\u2591',
 		hideCursor: true,
@@ -437,7 +499,7 @@ export async function scrapeSite(
 	if (downloadedCount === 0 && skippedCount === 0) {
 		console.log('\n❌ Could not download any videos. This may be due to invalid cookies.');
 
-		const answer = await inquirer.prompt<{ updateCookies: boolean }>([
+		const promptPromise = inquirer.prompt<{ updateCookies: boolean }>([
 			{
 				type: 'confirm',
 				name: 'updateCookies',
@@ -445,6 +507,13 @@ export async function scrapeSite(
 				default: true,
 			},
 		]);
+
+		const answer = await promptWithTimeout(
+			promptPromise,
+			30000, // 30 seconds
+			{ updateCookies: false },
+			'No response received within 30 seconds. Defaulting to "no" (cookies not updated).'
+		);
 
 		if (answer.updateCookies) {
 			// Force credential update
